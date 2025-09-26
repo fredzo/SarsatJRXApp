@@ -1,8 +1,8 @@
-import React, { useEffect, useState, useContext } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
-import { FrameContext } from '../providers/FrameProvider';
 import { Settings } from 'lucide-react-native';
+import React, { useContext, useEffect, useState } from 'react';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { FrameContext } from '../providers/FrameProvider';
 
 export default function Header() {
   const router = useRouter();
@@ -21,7 +21,7 @@ export default function Header() {
   return (
     <View style={styles.header}>
       <Text style={styles.time}>{time}</Text>
-      <Text style={styles.title}>SarsatJRX</Text>
+      <Text style={styles.title}>SarsatJRXApp</Text>
       <Text style={styles.batt}>Battery: {battery}%</Text>
       <View style={styles.leds}>
         {[0,1,2,3].map(i => (
@@ -44,8 +44,8 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   time: { color: 'white', fontSize: 14 },
-  title: { color: '#3fe6e6', fontSize: 18, fontWeight: '700' },
-  batt: { color: 'white', fontSize: 12 },
-  leds: { flexDirection: 'row' },
+  title: { color: '#3fe6e6', fontSize: 18, fontWeight: '700', width:'100%', textAlign:'center' },
+  batt: { color: 'white', fontSize: 12, width:100 },
+  leds: { flexDirection: 'row', width:100 },
   led: { width: 10, height: 10, borderRadius: 5, marginHorizontal: 2 },
 });
