@@ -45,7 +45,5 @@ app-example
 # Python cache
 /server/__pycache__
 
-# Yarn
-yarn.lock
 .vscode/
 debug.log
