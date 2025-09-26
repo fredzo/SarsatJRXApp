@@ -92,7 +92,7 @@ export default function HomeScreen() {
 
 const styles = StyleSheet.create({
   container:{ flex:1, padding:12, backgroundColor:'#001a1a' },
-  h1:{ color:'#3fe6e6', fontSize:20, fontWeight:'700', marginBottom:12 },
+  h1:{ color:'#3fe6e6', fontSize:20, fontWeight:'700', marginBottom:12, textAlign:'center' },
   line:{ color:'white', marginBottom:4 },
   countdown:{ marginTop:12, color:'cyan', fontWeight:'600' },
   link:{ color:'cyan', marginVertical:4 }

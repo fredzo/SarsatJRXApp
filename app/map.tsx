@@ -29,6 +29,7 @@ export default function MapScreen() {
       <Text style={styles.h1}>Map</Text>
       {/*Platform.OS !== 'web'*/ true ? (
         <MapView
+          center={[ latitude, longitude ]}
           /*style={{ flex: 1 }}
           initialRegion={{
             latitude,
@@ -41,7 +42,8 @@ export default function MapScreen() {
             position={[ latitude, longitude ]}
             //title="Beacon"
             /*description="Last known position"*/
-          />
+          >
+           </Marker>
         </MapView>
       ) : (
         <View style={styles.placeholder}>

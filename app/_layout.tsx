@@ -1,19 +1,9 @@
-import React from 'react';
 import { Tabs } from 'expo-router';
-import { FrameProvider, FrameContext } from '../providers/FrameProvider';
+import React from 'react';
+import { StyleSheet, View } from 'react-native';
+import Footer from '../components/Footer';
 import Header from '../components/Header';
-import { Text, View, StyleSheet } from 'react-native';
-import { useContext } from 'react';
-
-function Footer() {
-  const { frame } = useContext(FrameContext);
-  const countdown = frame?.['COUNTDOWN'] ?? '--';
-  return (
-    <View style={styles.footer}>
-      <Text style={{color:'white'}}>Next frame in: {countdown}s</Text>
-    </View>
-  );
-}
+import { FrameProvider } from '../providers/FrameProvider';
 
 export default function Layout() {
   return (
