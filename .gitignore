@@ -48,3 +48,4 @@ app-example
 # Yarn
 yarn.lock
 .vscode/
+debug.log
