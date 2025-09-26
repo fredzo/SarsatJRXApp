@@ -1,0 +1,99 @@
+import { Audio } from 'expo-av';
+import { useContext, useEffect, useState } from 'react';
+import { Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { FrameContext } from '../providers/FrameProvider';
+
+//const DEVICE_URL = 'http://sarsatjrx.local';
+const DEVICE_URL = 'http://localhost';
+
+export default function HomeScreen() {
+  const { frame, setFrame, coords } = useContext(FrameContext);
+  const [countdown, setCountdown] = useState<number>(0);
+
+  async function playBeep() {
+    try {
+      const { sound } = await Audio.Sound.createAsync(require('../assets/beep.wav'));
+      await sound.playAsync();
+    } catch {}
+  }
+
+  async function fetchFrame() {
+    try {
+      const resp = await fetch(DEVICE_URL+'/frame');
+      const text = await resp.text();
+      const parsed: Record<string, string> = {};
+      text.split(/\r?\n/).forEach(line => {
+        const [key, value] = line.split(':');
+        //console.log("Frame data:",key,value);
+        if (key && value) parsed[key.trim()] = value.trim();
+      });
+      setFrame(parsed);
+    } catch {}
+  }
+
+  useEffect(() => {
+    fetchFrame();
+    const evtSource = new EventSource(DEVICE_URL+'/sse');
+    evtSource.onmessage = e => {
+      if (!e.data) return;
+      if (e.data.startsWith('tick;')) 
+      {
+        const parts = e.data.split(';');
+        if(parts.length==3)
+        {
+          const val = parseInt(parts[1]);
+          setCountdown(val);
+        }
+      } 
+      else if (e.data.startsWith('frame'))
+      {
+        playBeep();
+        fetchFrame();
+      }
+    };
+    return () => evtSource.close();
+  }, []);
+
+  const openMaps = () => {
+    if (!coords) return;
+    const { latitude, longitude } = coords;
+    Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`);
+  };
+  const openWaze = () => {
+    if (!coords) return;
+    const { latitude, longitude } = coords;
+    Linking.openURL(`https://waze.com/ul?ll=${latitude},${longitude}&navigate=yes`);
+  };
+
+  return (
+    <View style={styles.container}>
+      <Text style={styles.h1}>Distress 406</Text>
+      <ScrollView>
+        {frame
+          ? Object.entries(frame).map(([k,v]) => (
+              <Text key={k} style={styles.line}>{k}: {v}</Text>
+            ))
+          : <Text style={styles.line}>Waiting for frame...</Text>}
+      </ScrollView>
+      {coords && (
+        <View style={{marginTop:12}}>
+          <TouchableOpacity onPress={openMaps}>
+            <Text style={styles.link}>Open in Google Maps</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={openWaze}>
+            <Text style={styles.link}>Open in Waze</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+      <Text style={styles.countdown}>Next frame in: {countdown}s</Text>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container:{ flex:1, padding:12, backgroundColor:'#001a1a' },
+  h1:{ color:'#3fe6e6', fontSize:20, fontWeight:'700', marginBottom:12 },
+  line:{ color:'white', marginBottom:4 },
+  countdown:{ marginTop:12, color:'cyan', fontWeight:'600' },
+  link:{ color:'cyan', marginVertical:4 }
+});
