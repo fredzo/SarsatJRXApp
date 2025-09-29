@@ -1,6 +1,6 @@
 import { Tabs } from 'expo-router';
 import React from 'react';
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 import Footer from '../components/Footer';
 import Header from '../components/Header';
 import { FrameProvider } from '../providers/FrameProvider';
@@ -20,7 +20,3 @@ export default function Layout() {
     </FrameProvider>
   );
 }
-
-const styles = StyleSheet.create({
-  footer:{ backgroundColor:'#033', padding:8, alignItems:'center' }
-});

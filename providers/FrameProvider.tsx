@@ -20,15 +20,12 @@ export const FrameProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const setFrame = (data: Record<string, string>) => {
     setFrameState(data);
-    if (data['Lat'] && data['Lon']) {
-      const lat = parseFloat(data['Lat']);
-      const lon = parseFloat(data['Lon']);
+    if (data['lat'] && data['lon']) {
+      const lat = parseFloat(data['lat']);
+      const lon = parseFloat(data['lon']);
       if (!isNaN(lat) && !isNaN(lon)) {
         setCoords({ latitude: lat, longitude: lon });
       }
-    }
-    if (data['COUNTDOWN']) {
-      // keep countdown also in frame
     }
   };
 

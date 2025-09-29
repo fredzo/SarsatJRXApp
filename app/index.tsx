@@ -10,10 +10,30 @@ export default function HomeScreen() {
   const { frame, setFrame, coords } = useContext(FrameContext);
   const [countdown, setCountdown] = useState<number>(0);
 
-  async function playBeep() {
+  const soundOK = new Audio.Sound();
+  const soundKO = new Audio.Sound();
+  const soundError = new Audio.Sound();
+
+  async function playSoundOK() {
     try {
-      const { sound } = await Audio.Sound.createAsync(require('../assets/beep.wav'));
-      await sound.playAsync();
+      if(!soundOK._loaded) await soundOK.loadAsync(require('../assets/beep.wav'));
+      await soundOK.playAsync();
+    } catch (error){
+      console.log("Error when playing sound :",error);
+    }
+  }
+
+  async function playSoundKO() {
+    try {
+      if(!soundKO._loaded) await soundKO.loadAsync(require('../assets/beep.wav'));
+      await soundKO.playAsync();
+    } catch {}
+  }
+
+  async function playSoundError() {
+    try {
+      if(!soundError._loaded) await soundError.loadAsync(require('../assets/beep.wav'));
+      await soundError.playAsync();
     } catch {}
   }
 
@@ -21,10 +41,16 @@ export default function HomeScreen() {
     try {
       const resp = await fetch(DEVICE_URL+'/frame');
       const text = await resp.text();
+      parseFrame(text);
+    } catch {}
+  }
+
+  function parseFrame(frameData: string) {
+    try {
       const parsed: Record<string, string> = {};
-      text.split(/\r?\n/).forEach(line => {
-        const [key, value] = line.split(':');
-        //console.log("Frame data:",key,value);
+      frameData.split(/\r?\n/).forEach(line => {
+        const [key, value] = line.split('=');
+        console.log("Frame data:",key,value);
         if (key && value) parsed[key.trim()] = value.trim();
       });
       setFrame(parsed);
@@ -47,8 +73,10 @@ export default function HomeScreen() {
       } 
       else if (e.data.startsWith('frame'))
       {
-        playBeep();
-        fetchFrame();
+        playSoundOK();
+        console.log("Event data: ",e.data);
+        parseFrame(e.data.split("\n").slice(1).join("\n"));
+        //fetchFrame();
       }
     };
     return () => evtSource.close();
