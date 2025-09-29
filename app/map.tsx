@@ -1,6 +1,6 @@
 import { MapView, Marker } from '@netizen-teknologi/react-native-maps-leaflet';
 import { useContext } from 'react';
-import { Linking, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { FrameContext } from '../providers/FrameProvider';
 
 
@@ -17,42 +17,20 @@ export default function MapScreen() {
   }
 
   const { latitude, longitude } = coords;
-  //const latitude=48.85854530343698;
-  //const longitude=2.35265015343154;
 
   const externalUrl = `https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`;
 
-  console.log("Latitude = ", latitude, "Longitude =", longitude);
+  // console.log("Latitude = ", latitude, "Longitude =", longitude);
 
   return (
     <View style={styles.container}>
       <Text style={styles.h1}>Map</Text>
-      {/*Platform.OS !== 'web'*/ true ? (
         <MapView
-          center={[ latitude, longitude ]}
-          /*style={{ flex: 1 }}
-          initialRegion={{
-            latitude,
-            longitude,
-            latitudeDelta: 0.05,
-            longitudeDelta: 0.05,
-          }}*/
-        >
+          center={[ latitude, longitude ]}>
           <Marker
-            position={[ latitude, longitude ]}
-            //title="Beacon"
-            /*description="Last known position"*/
-          >
+            position={[ latitude, longitude ]} >
            </Marker>
         </MapView>
-      ) : (
-        <View style={styles.placeholder}>
-          <Text>Map preview is not available here.</Text>
-          <TouchableOpacity onPress={() => Linking.openURL(externalUrl)}>
-            <Text style={{ color: 'cyan', marginTop: 8 }}>Open in Google Maps</Text>
-          </TouchableOpacity>
-        </View>
-      )}
     </View>
   );
 }

@@ -13,6 +13,7 @@ export default function Layout() {
         <Tabs screenOptions={{headerShown:false}}>
           <Tabs.Screen name="index" options={{ title: 'Frames' }} />
           <Tabs.Screen name="map" options={{ title: 'Map' }} />
+          <Tabs.Screen name="data" options={{ title: 'Data' }} />
           <Tabs.Screen name="settings" options={{ title: 'Settings' }} />
         </Tabs>
         <Footer />

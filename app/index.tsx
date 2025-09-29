@@ -3,8 +3,8 @@ import { useContext, useEffect, useState } from 'react';
 import { Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { FrameContext } from '../providers/FrameProvider';
 
-//const DEVICE_URL = 'http://sarsatjrx.local';
-const DEVICE_URL = 'http://localhost';
+const DEVICE_URL = 'http://sarsatjrx.local';
+//const DEVICE_URL = 'http://localhost';
 
 export default function HomeScreen() {
   const { frame, setFrame, coords } = useContext(FrameContext);
@@ -14,27 +14,50 @@ export default function HomeScreen() {
   const soundKO = new Audio.Sound();
   const soundError = new Audio.Sound();
 
-  async function playSoundOK() {
+  async function loadSounds() 
+  {
     try {
       if(!soundOK._loaded) await soundOK.loadAsync(require('../assets/beep.wav'));
+      if(!soundKO._loaded) await soundKO.loadAsync(require('../assets/beep.wav'));
+      if(!soundError._loaded) await soundError.loadAsync(require('../assets/beep.wav'));
+    } catch (error){
+      console.log("Error while loading sounds :",error);
+    }
+  }
+
+  async function unloadSounds() 
+  {
+    try {
+      if(soundOK._loaded) await soundOK.unloadAsync();
+      if(soundKO._loaded) await soundKO.unloadAsync();
+      if(soundError._loaded) await soundError.unloadAsync();
+    } catch (error){
+      console.log("Error while unloading sounds :",error);
+    }
+  }
+
+  async function playSoundOK() {
+    try {
       await soundOK.playAsync();
     } catch (error){
-      console.log("Error when playing sound :",error);
+      console.log("Error when playing OK sound :",error);
     }
   }
 
   async function playSoundKO() {
     try {
-      if(!soundKO._loaded) await soundKO.loadAsync(require('../assets/beep.wav'));
       await soundKO.playAsync();
-    } catch {}
+    } catch (error){
+      console.log("Error when playing KO sound :",error);
+    }
   }
 
   async function playSoundError() {
     try {
-      if(!soundError._loaded) await soundError.loadAsync(require('../assets/beep.wav'));
       await soundError.playAsync();
-    } catch {}
+    } catch (error){
+      console.log("Error when playing Error sound :",error);
+    }
   }
 
   async function fetchFrame() {
@@ -50,7 +73,7 @@ export default function HomeScreen() {
       const parsed: Record<string, string> = {};
       frameData.split(/\r?\n/).forEach(line => {
         const [key, value] = line.split('=');
-        console.log("Frame data:",key,value);
+        //console.log("Frame data:",key,value);
         if (key && value) parsed[key.trim()] = value.trim();
       });
       setFrame(parsed);
@@ -58,6 +81,7 @@ export default function HomeScreen() {
   }
 
   useEffect(() => {
+    loadSounds();
     fetchFrame();
     const evtSource = new EventSource(DEVICE_URL+'/sse');
     evtSource.onmessage = e => {
@@ -74,12 +98,15 @@ export default function HomeScreen() {
       else if (e.data.startsWith('frame'))
       {
         playSoundOK();
-        console.log("Event data: ",e.data);
+        //console.log("Event data: ",e.data);
         parseFrame(e.data.split("\n").slice(1).join("\n"));
-        //fetchFrame();
       }
     };
-    return () => evtSource.close();
+    return () => 
+    {
+        evtSource.close();
+        unloadSounds();
+    };
   }, []);
 
   const openMaps = () => {
@@ -95,7 +122,7 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.h1}>Distress 406</Text>
+      <Text style={styles.h1}>{frame ? frame['title'] : "No frame yet"}</Text>
       <ScrollView>
         {frame
           ? Object.entries(frame).map(([k,v]) => (
