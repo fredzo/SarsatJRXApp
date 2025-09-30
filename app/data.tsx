@@ -19,7 +19,7 @@ export default function DataScreen() {
     );
   }
 
-  const externalUrl = `https://decoder2.herokuapp.com/decoded/`;
+  const externalUrl = `http://decoder2.herokuapp.com/decoded/`;
 
 
   return (

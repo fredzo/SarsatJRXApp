@@ -27,9 +27,7 @@ export default function MapScreen() {
       <Text style={styles.h1}>Map</Text>
         <MapView
           center={[ latitude, longitude ]}>
-          <Marker
-            position={[ latitude, longitude ]} >
-           </Marker>
+          <Marker position={[ latitude, longitude ]}/>
         </MapView>
     </View>
   );

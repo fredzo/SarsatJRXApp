@@ -1,10 +1,12 @@
 import { Audio } from 'expo-av';
 import { useContext, useEffect, useState } from 'react';
 import { Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import EventSource from 'react-native-sse';
 import { FrameContext } from '../providers/FrameProvider';
 
-const DEVICE_URL = 'http://sarsatjrx.local';
+//const DEVICE_URL = 'http://sarsatjrx.local';
 //const DEVICE_URL = 'http://localhost';
+const DEVICE_URL = 'http://10.0.2.2';
 
 export default function HomeScreen() {
   const { frame, setFrame, coords } = useContext(FrameContext);
@@ -84,7 +86,7 @@ export default function HomeScreen() {
     loadSounds();
     fetchFrame();
     const evtSource = new EventSource(DEVICE_URL+'/sse');
-    evtSource.onmessage = e => {
+    evtSource.addEventListener("message", e => {
       if (!e.data) return;
       if (e.data.startsWith('tick;')) 
       {
@@ -101,7 +103,10 @@ export default function HomeScreen() {
         //console.log("Event data: ",e.data);
         parseFrame(e.data.split("\n").slice(1).join("\n"));
       }
-    };
+    });
+    evtSource.addEventListener("error", (event) => {
+      console.error("SSE Error", event);
+    });    
     return () => 
     {
         evtSource.close();
