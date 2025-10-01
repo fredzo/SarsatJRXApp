@@ -9,7 +9,7 @@ const DEVICE_URL = 'http://sarsatjrx.local';
 //const DEVICE_URL = 'http://10.0.2.2';
 
 export default function HomeScreen() {
-  const { frames, currentIndex, addFrame, coords } = useContext(FrameContext);
+  const { frames, currentIndex, addFrame } = useContext(FrameContext);
   const [countdown, setCountdown] = useState<number>(0);
 
   const soundOK = new Audio.Sound();
@@ -126,27 +126,25 @@ export default function HomeScreen() {
   }, []);
 
   const openMaps = () => {
-    if (!coords) return;
-    const { latitude, longitude } = coords;
-    Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`);
+    if (!frames[currentIndex] || !frames[currentIndex].lat || !frames[currentIndex].lon) return;
+    Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${frames[currentIndex].lat},${frames[currentIndex].lon}`);
   };
   const openWaze = () => {
-    if (!coords) return;
-    const { latitude, longitude } = coords;
-    Linking.openURL(`https://waze.com/ul?ll=${latitude},${longitude}&navigate=yes`);
+    if (!frames[currentIndex] || !frames[currentIndex].lat || !frames[currentIndex].lon) return;
+    Linking.openURL(`https://waze.com/ul?ll=${frames[currentIndex].lat},${frames[currentIndex].lon}&navigate=yes`);
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.h1}>{frames[currentIndex] ? frames[currentIndex]['title'] : "No frame yet"}</Text>
+      <Text style={styles.h1}>{frames[currentIndex] ? frames[currentIndex].data['title'] : "No frame yet"}</Text>
       <ScrollView>
         {frames[currentIndex]
-          ? Object.entries(frames[currentIndex]).map(([k,v]) => (
+          ? Object.entries(frames[currentIndex].data).map(([k,v]) => (
               <Text key={k} style={styles.line}>{k}: {v}</Text>
             ))
           : <Text style={styles.line}>Waiting for frame...</Text>}
       </ScrollView>
-      {coords && (
+      {frames[currentIndex] && !frames[currentIndex].lat && !frames[currentIndex].lon && (
         <View style={{marginTop:12}}>
           <TouchableOpacity onPress={openMaps}>
             <Text style={styles.link}>Open in Google Maps</Text>

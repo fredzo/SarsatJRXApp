@@ -8,9 +8,9 @@ import { FrameContext } from '../providers/FrameProvider';
 
 
 export default function DataScreen() {
-  const { frame } = useContext(FrameContext);
+  const { frames, currentIndex } = useContext(FrameContext);
 
-  if (!frame) {
+  if (!frames[currentIndex]) {
     return (
       <View style={styles.container}>
         <Text style={styles.h1}>Map</Text>
@@ -25,9 +25,9 @@ export default function DataScreen() {
   return (
     <SafeAreaView style={styles.container} edges={["top", "bottom", "left", "right"]}>
       {Platform.OS === "web" ? (
-        <iframe src={externalUrl + frame['data']} style={styles.webIframe as any} />
+        <iframe src={externalUrl + frames[currentIndex].data['data']} style={styles.webIframe as any} />
       ) : (
-        <WebView source={{ uri: externalUrl + frame['data'] }} style={styles.webview} />
+        <WebView source={{ uri: externalUrl + frames[currentIndex].data['data'] }} style={styles.webview} />
       )}
     </SafeAreaView>
   );

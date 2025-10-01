@@ -5,9 +5,9 @@ import { WebView } from 'react-native-webview';
 import { FrameContext } from '../providers/FrameProvider';
 
 export default function MapScreen() {
-  const { coords } = useContext(FrameContext);
+  const { frames, currentIndex } = useContext(FrameContext);
 
-  if (!coords) {
+  if (!frames[currentIndex] || !frames[currentIndex].lat || !frames[currentIndex].lon) {
     return (
       <View style={styles.container}>
         <Text style={styles.h1}>Map</Text>
@@ -16,7 +16,8 @@ export default function MapScreen() {
     );
   }
 
-  const { latitude, longitude } = coords;
+  const latitude = frames[currentIndex].lat;
+  const longitude =frames[currentIndex].lon;
 
   // console.log("Latitude = ", latitude, "Longitude =", longitude);
 
