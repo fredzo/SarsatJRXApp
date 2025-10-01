@@ -9,7 +9,7 @@ const DEVICE_URL = 'http://sarsatjrx.local';
 //const DEVICE_URL = 'http://10.0.2.2';
 
 export default function HomeScreen() {
-  const { frame, setFrame, coords } = useContext(FrameContext);
+  const { frames, currentIndex, addFrame, coords } = useContext(FrameContext);
   const [countdown, setCountdown] = useState<number>(0);
 
   const soundOK = new Audio.Sound();
@@ -62,6 +62,17 @@ export default function HomeScreen() {
     }
   }
 
+  async function fetchFrames() {
+    try {
+      const resp = await fetch(DEVICE_URL+'/frames');
+      const text = await resp.text();
+      text.split("#\n").forEach(line => 
+      {
+        parseFrame(line);
+      });
+    } catch {}
+  }
+
   async function fetchFrame() {
     try {
       const resp = await fetch(DEVICE_URL+'/frame');
@@ -78,13 +89,13 @@ export default function HomeScreen() {
         //console.log("Frame data:",key,value);
         if (key && value) parsed[key.trim()] = value.trim();
       });
-      setFrame(parsed);
+      addFrame(parsed);
     } catch {}
   }
 
   useEffect(() => {
     loadSounds();
-    fetchFrame();
+    fetchFrames();
     const evtSource = new EventSource(DEVICE_URL+'/sse');
     evtSource.addEventListener("message", e => {
       if (!e.data) return;
@@ -105,7 +116,7 @@ export default function HomeScreen() {
       }
     });
     evtSource.addEventListener("error", (event) => {
-      console.error("SSE Error", event);
+      //console.error("SSE Error", event);
     });    
     return () => 
     {
@@ -127,10 +138,10 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.h1}>{frame ? frame['title'] : "No frame yet"}</Text>
+      <Text style={styles.h1}>{frames[currentIndex] ? frames[currentIndex]['title'] : "No frame yet"}</Text>
       <ScrollView>
-        {frame
-          ? Object.entries(frame).map(([k,v]) => (
+        {frames[currentIndex]
+          ? Object.entries(frames[currentIndex]).map(([k,v]) => (
               <Text key={k} style={styles.line}>{k}: {v}</Text>
             ))
           : <Text style={styles.line}>Waiting for frame...</Text>}
