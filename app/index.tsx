@@ -4,9 +4,9 @@ import { Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'r
 import EventSource from 'react-native-sse';
 import { FrameContext } from '../providers/FrameProvider';
 
-//const DEVICE_URL = 'http://sarsatjrx.local';
+const DEVICE_URL = 'http://sarsatjrx.local';
 //const DEVICE_URL = 'http://localhost';
-const DEVICE_URL = 'http://10.0.2.2';
+//const DEVICE_URL = 'http://10.0.2.2';
 
 export default function HomeScreen() {
   const { frame, setFrame, coords } = useContext(FrameContext);
