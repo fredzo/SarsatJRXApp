@@ -1,20 +1,23 @@
+import { ArrowBigLeft, ArrowBigRight } from 'lucide-react-native';
 import React, { useContext } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import CountdownSpinner from '../components/CountdownSpinner';
 import { FrameContext } from '../providers/FrameProvider';
 
+
 export default function Footer() {
-  const { frames, currentIndex, nextFrame, prevFrame } = useContext(FrameContext);
-  const countdown = frames[currentIndex]?.data['COUNTDOWN'] ?? '--';
+  const { frames, currentIndex, countdown, nextFrame, prevFrame } = useContext(FrameContext);
   return (
     <View style={styles.footer}>
       <TouchableOpacity onPress={prevFrame}>
-        <Text style={styles.btn}>Prev</Text>
+        <ArrowBigLeft size={28} color="cyan" />
       </TouchableOpacity>
+      <CountdownSpinner countdown={countdown} size={40} arcLength={60} strokeWidth={4} color="cyan" backgroundColor="#555" />
       <Text style={styles.info}>
         Frame {frames.length > 0 ? currentIndex + 1 : 0} / {frames.length}
       </Text>
       <TouchableOpacity onPress={nextFrame}>
-        <Text style={styles.btn}>Next</Text>
+        <ArrowBigRight size={28} color="cyan" />
       </TouchableOpacity>
       <Text style={styles.countdown}>Next frame in: {countdown}s</Text>
     </View>

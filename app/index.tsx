@@ -1,5 +1,5 @@
 import { Audio } from 'expo-av';
-import { useContext, useEffect, useState } from 'react';
+import { useContext, useEffect } from 'react';
 import { Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import EventSource from 'react-native-sse';
 import { FrameContext } from '../providers/FrameProvider';
@@ -9,8 +9,7 @@ const DEVICE_URL = 'http://localhost';
 //const DEVICE_URL = 'http://10.0.2.2';
 
 export default function HomeScreen() {
-  const { frames, currentIndex, addFrame } = useContext(FrameContext);
-  const [countdown, setCountdown] = useState<number>(0);
+  const { frames, currentIndex, addFrame, setCountdown } = useContext(FrameContext);
 
   const soundOK = new Audio.Sound();
   const soundKO = new Audio.Sound();
@@ -157,7 +156,6 @@ export default function HomeScreen() {
           </TouchableOpacity>
         </View>
       )}
-      <Text style={styles.countdown}>Next frame in: {countdown}s</Text>
     </View>
   );
 }
@@ -166,6 +164,5 @@ const styles = StyleSheet.create({
   container:{ flex:1, padding:12, backgroundColor:'#001a1a' },
   h1:{ color:'#3fe6e6', fontSize:20, fontWeight:'700', marginBottom:12, textAlign:'center' },
   line:{ color:'white', marginBottom:4 },
-  countdown:{ marginTop:12, color:'cyan', fontWeight:'600' },
   link:{ color:'cyan', marginVertical:4 }
 });

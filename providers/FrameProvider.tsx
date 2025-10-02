@@ -9,7 +9,9 @@ export type Frame = {
 type FrameContextType = {
   frames: Frame[];
   currentIndex: number;
+  countdown: number | null;
   addFrame: (data: Record<string, string>) => void;
+  setCountdown: (countdown: number) => void;
   nextFrame: () => void;
   prevFrame: () => void;
 };
@@ -17,7 +19,9 @@ type FrameContextType = {
 export const FrameContext = createContext<FrameContextType>({
   frames: [],
   currentIndex: 0,
+  countdown: null,
   addFrame: () => {},
+  setCountdown: () => {},
   nextFrame: () => {},
   prevFrame: () => {},
 });
@@ -25,6 +29,7 @@ export const FrameContext = createContext<FrameContextType>({
 export const FrameProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [frames, setFrames] = useState<Frame[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [countdown, setCountdownValue] = useState<number | null>(null);
 
   const addFrame = (data: Record<string, string>) => {
     let frameLat = null;
@@ -46,6 +51,10 @@ export const FrameProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     });
   };
 
+  const setCountdown = (countdown: number) => {
+    setCountdownValue(i => (countdown));
+  };
+
   const nextFrame = () => {
     setCurrentIndex(i => ((i + 1) % frames.length));
   };
@@ -55,7 +64,7 @@ export const FrameProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   return (
-    <FrameContext.Provider value={{ frames, currentIndex, addFrame, nextFrame, prevFrame }}>
+    <FrameContext.Provider value={{ frames, currentIndex, countdown, addFrame, setCountdown, nextFrame, prevFrame }}>
       {children}
     </FrameContext.Provider>
   );
