@@ -47,11 +47,11 @@ export const FrameProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const nextFrame = () => {
-    setCurrentIndex(i => Math.min(i + 1, frames.length - 1));
+    setCurrentIndex(i => ((i + 1) % frames.length));
   };
 
   const prevFrame = () => {
-    setCurrentIndex(i => Math.max(i - 1, 0));
+    setCurrentIndex(i => (((i - 1) >= 0) ? (i - 1) : (frames.length-1)));
   };
 
   return (

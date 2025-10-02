@@ -4,7 +4,7 @@ import { FrameContext } from '../providers/FrameProvider';
 
 export default function Footer() {
   const { frames, currentIndex, nextFrame, prevFrame } = useContext(FrameContext);
-  const countdown = frames[currentIndex]?.['COUNTDOWN'] ?? '--';
+  const countdown = frames[currentIndex]?.data['COUNTDOWN'] ?? '--';
   return (
     <View style={styles.footer}>
       <TouchableOpacity onPress={prevFrame}>

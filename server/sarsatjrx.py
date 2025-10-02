@@ -65,6 +65,16 @@ async def get_frame():
     frame = frames[-1]
     return "\n".join(f"{k}={v}" for k, v in frame.items())
 
+@app.get("/frames", response_class=PlainTextResponse)
+async def get_all_frames():
+    """Return all frames separated by '#\\n'."""
+    if not frames:
+        return "No frame yet"
+    return "#\n".join(
+        "\n".join(f"{k}={v}" for k, v in frame.items())
+        for frame in frames
+    )
+
 
 @app.get("/sse")
 async def sse():
