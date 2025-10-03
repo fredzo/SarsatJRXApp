@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { ScrollView, StyleSheet, Text } from 'react-native';
 
 export default function SettingsScreen() {
   return (

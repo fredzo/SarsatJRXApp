@@ -3,7 +3,7 @@ import { Animated, Easing, Platform, StyleSheet, Text, View } from "react-native
 import Svg, { Circle } from "react-native-svg";
 
 type Props = {
-  countdown: number;
+  countdown: number | null;
   size?: number;
   arcLength?: number; // longueur de l’arc en degrés (ex: 90)
   strokeWidth?: number;
@@ -79,7 +79,7 @@ const CountdownSpinner: React.FC<Props> = ({
       </Animated.View>
 
       {/* Texte countdown */}
-      <Text style={styles.text}>{countdown}</Text>
+      <Text style={styles.text}>{countdown ? countdown : ''}</Text>
     </View>
   );
 };

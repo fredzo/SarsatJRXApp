@@ -1,12 +1,10 @@
 import { useRouter } from 'expo-router';
 import { Settings } from 'lucide-react-native';
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { FrameContext } from '../providers/FrameProvider';
 
 export default function Header() {
   const router = useRouter();
-  const { frame } = useContext(FrameContext);
   const [time, setTime] = useState<string>(new Date().toLocaleTimeString());
 
   useEffect(() => {
@@ -16,7 +14,7 @@ export default function Header() {
     return () => clearInterval(interval);
   }, []);
 
-  const battery = frame?.['BATT'] ?? '--';
+  const battery = '--'; // TODO
 
   return (
     <View style={styles.header}>

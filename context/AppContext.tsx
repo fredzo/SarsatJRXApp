@@ -15,7 +15,6 @@ export const AppContext = createContext<AppContextType>({
 });
 
 export const AppContextProvider = ({ children }: { children: React.ReactNode }) => {
-//export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [eventSource, setEventSource] = useState<EventSource | null>(null);
     const { addFrame, setCountdown } = useContext(FrameContext);
     const reconnectTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -126,7 +125,6 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
         } catch {}
     }
     
-
     const handleMessage = (e: MessageEvent) => {
         if (!e.data) return;
         if (e.data.startsWith('tick;')) 

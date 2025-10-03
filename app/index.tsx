@@ -3,7 +3,7 @@ import { Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'r
 import { FrameContext } from '../providers/FrameProvider';
 
 export default function HomeScreen() {
-  const { frames, currentIndex, setCountdown } = useContext(FrameContext);
+  const { frames, currentIndex } = useContext(FrameContext);
 
   const openMaps = () => {
     if (!frames[currentIndex] || !frames[currentIndex].lat || !frames[currentIndex].lon) return;

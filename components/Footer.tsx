@@ -19,7 +19,6 @@ export default function Footer() {
       <TouchableOpacity onPress={nextFrame}>
         <ArrowBigRight size={28} color="cyan" />
       </TouchableOpacity>
-      <Text style={styles.countdown}>Next frame in: {countdown}s</Text>
     </View>
   );
 }
