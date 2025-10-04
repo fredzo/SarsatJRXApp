@@ -1,9 +1,10 @@
 import { FrameContext } from "@/providers/FrameProvider";
-import { Audio } from 'expo-av';
+import { useAudioPlayer } from 'expo-audio';
 import React, { createContext, useContext, useEffect, useRef, useState } from "react";
+import EventSource, { MessageEvent } from 'react-native-sse';
 
-//const DEVICE_URL = 'http://sarsatjrx.local';
-const DEVICE_URL = 'http://localhost';
+const DEVICE_URL = 'http://sarsatjrx.local';
+//const DEVICE_URL = 'http://localhost';
 //const DEVICE_URL = 'http://10.0.2.2';
 
 type AppContextType = {
@@ -16,7 +17,7 @@ export const AppContext = createContext<AppContextType>({
 
 export const AppContextProvider = ({ children }: { children: React.ReactNode }) => {
     const [eventSource, setEventSource] = useState<EventSource | null>(null);
-    const { addFrame, setCountdown } = useContext(FrameContext);
+    const { frames, addFrame, setCountdown } = useContext(FrameContext);
     const reconnectTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
     const retryDelay = useRef(1000); // 1s au départ
     const maxDelay = 5000; // 5s max
@@ -41,54 +42,23 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
         retryDelay.current = Math.min(retryDelay.current * 2, maxDelay);
     };
 
-    const soundOK = new Audio.Sound();
-    const soundKO = new Audio.Sound();
-    const soundError = new Audio.Sound();
+    const soundOK = useAudioPlayer(require('../assets/beep.wav'));
+    const soundKO = useAudioPlayer(require('../assets/beep.wav'));
+    const soundError = useAudioPlayer(require('../assets/beep.wav'));
 
-    async function loadSounds() 
-    {
-        try {
-            if(!soundOK._loaded) await soundOK.loadAsync(require('../assets/beep.wav'));
-            if(!soundKO._loaded) await soundKO.loadAsync(require('../assets/beep.wav'));
-            if(!soundError._loaded) await soundError.loadAsync(require('../assets/beep.wav'));
-        } catch (error){
-            console.log("Error while loading sounds :",error);
-        }
+    function playSoundOK() {
+        soundOK.seekTo(0);
+        soundOK.play();
     }
 
-    async function unloadSounds() 
-    {
-        try {
-            if(soundOK._loaded) await soundOK.unloadAsync();
-            if(soundKO._loaded) await soundKO.unloadAsync();
-            if(soundError._loaded) await soundError.unloadAsync();
-        } catch (error){
-            console.log("Error while unloading sounds :",error);
-        }
+    function playSoundKO() {
+        soundKO.seekTo(0);
+        soundKO.play();
     }
 
-    async function playSoundOK() {
-        try {
-            await soundOK.playAsync();
-        } catch (error){
-            console.log("Error when playing OK sound :",error);
-        }
-    }
-
-    async function playSoundKO() {
-        try {
-            await soundKO.playAsync();
-        } catch (error){
-            console.log("Error when playing KO sound :",error);
-        }
-    }
-
-    async function playSoundError() {
-        try {
-            await soundError.playAsync();
-        } catch (error){
-            console.log("Error when playing Error sound :",error);
-        }
+    function playSoundError() {
+        soundError.seekTo(0);
+        soundError.play();
     }
 
     async function fetchFrames() {
@@ -177,7 +147,6 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
     useEffect(() => {
         if (hasRun.current) return;
         hasRun.current = true;
-        loadSounds();
         fetchFrames();
 
         const es = connect();
@@ -186,10 +155,9 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
             // Keep resources since app context can be reloaded on frame provider changes
             /*console.log("👋 Closing EventSource");
             es.close();
-            if (reconnectTimeout.current) clearTimeout(reconnectTimeout.current);
-            unloadSounds();*/
+            if (reconnectTimeout.current) clearTimeout(reconnectTimeout.current);*/
         };
-    }, [loadSounds, fetchFrames, unloadSounds]);
+    }, [fetchFrames]);
 
   return (
     <AppContext.Provider value={{ eventSource }}>
