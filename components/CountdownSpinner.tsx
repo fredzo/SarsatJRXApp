@@ -79,7 +79,7 @@ const CountdownSpinner: React.FC<Props> = ({
       </Animated.View>
 
       {/* Texte countdown */}
-      <Text style={styles.text}>{countdown ? countdown : ''}</Text>
+      <Text style={styles.text}>{countdown ?  Math.abs(countdown) : ''}</Text>
     </View>
   );
 };

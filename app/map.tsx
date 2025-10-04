@@ -16,6 +16,10 @@ export default function MapScreen() {
     );
   }
 
+  const isBCH1ok = frames[currentIndex].data.bch1 && frames[currentIndex].data.bch1.toUpperCase() === "OK";
+  const isBCH2ok = frames[currentIndex].data.bch2 && frames[currentIndex].data.bch2.toUpperCase() === "OK";
+  const hasError = (!isBCH1ok) || (frames[currentIndex].data.bch2 && !isBCH2ok);
+
   const latitude = frames[currentIndex].lat;
   const longitude =frames[currentIndex].lon;
 
@@ -24,7 +28,11 @@ export default function MapScreen() {
 
   if (Platform.OS === 'web') {
     return (
-    <View style={styles.container}>
+    <View 
+      style={[
+        styles.container,
+        hasError ? styles.containerError : undefined,
+      ]}>
       <Text style={styles.h1}>Map</Text>
         <MapView
           center={[ latitude, longitude ]}>
@@ -65,7 +73,11 @@ export default function MapScreen() {
   `;
 
   return (
-    <View style={styles.container}>
+    <View 
+      style={[
+        styles.container,
+        hasError ? styles.containerError : undefined,
+      ]}>
       <WebView
         originWhitelist={['*']}
         source={{ html: leafletHtml }}
@@ -76,7 +88,17 @@ export default function MapScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 12, backgroundColor: '#001a1a' },
+  container: {
+    flex: 1,
+    backgroundColor: "#001000",
+    paddingTop: 40,
+    paddingHorizontal: 12,
+    borderWidth: 4,
+    borderColor: "#003000",
+  },
+  containerError: {
+    borderColor: "#FF0000",
+  },
   h1: { color: '#3fe6e6', fontSize: 20, fontWeight: '700', marginBottom: 12 },
   placeholder: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#022', padding: 12 },
   webview: { flex: 1 },
