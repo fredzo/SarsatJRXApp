@@ -1,4 +1,4 @@
-import { MapView, Marker } from '@netizen-teknologi/react-native-maps-leaflet';
+import { MapView, Marker, Popup } from '@netizen-teknologi/react-native-maps-leaflet';
 import { useContext } from 'react';
 import { Platform, StyleSheet, Text, View } from 'react-native';
 import { WebView } from 'react-native-webview';
@@ -38,6 +38,10 @@ export default function MapScreen() {
           center={[ latitude, longitude ]}>
           <Marker
             position={[ latitude, longitude ]} >
+              <Popup>
+                <Text>${frames[currentIndex].data.title} Beacon</Text>
+                <Text>${frames[currentIndex].data.protocolDesc}</Text>
+              </Popup>
            </Marker>
         </MapView>
     </View>
@@ -65,7 +69,7 @@ export default function MapScreen() {
         }).addTo(map);
         L.marker([${latitude}, ${longitude}])
           .addTo(map)
-          .bindPopup('Vous êtes ici')
+          .bindPopup('${frames[currentIndex].data.title} Beacon<br/>${frames[currentIndex].data.protocolDesc}')
           .openPopup();
       </script>
     </body>
