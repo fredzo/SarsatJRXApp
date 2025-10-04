@@ -3,10 +3,10 @@ import { useAudioPlayer } from 'expo-audio';
 import React, { createContext, useContext, useEffect, useRef, useState } from "react";
 import EventSource, { MessageEvent } from 'react-native-sse';
 
-//const DEVICE_URL = 'http://sarsatjrx.local';
+const DEVICE_URL = 'http://sarsatjrx.local';
 //const DEVICE_URL = 'http://localhost';
 //const DEVICE_URL = 'http://10.0.2.2';
-const DEVICE_URL = 'http://10.157.161.213';
+//const DEVICE_URL = 'http://10.157.161.213';
 
 type AppContextType = {
   eventSource: EventSource | null;
@@ -66,7 +66,7 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
         try {
             const resp = await fetch(DEVICE_URL+'/frames');
             const text = await resp.text();
-            text.split("#\n").forEach(line => 
+            text.split("\n#\n").forEach(line => 
             {
             parseFrame(line);
             });
@@ -85,7 +85,9 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
         try {
             const parsed: Record<string, string> = {};
             frameData.split(/\r?\n/).forEach(line => {
-                const [key, value] = line.split('=');
+                const idx = line.indexOf('=');
+                const key = line.slice(0, idx);
+                const value = line.slice(idx + 1);
                 //console.log("Frame data:",key,value);
                 if (key && value) parsed[key.trim()] = value.trim();
             });
@@ -148,7 +150,8 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
     useEffect(() => {
         if (hasRun.current) return;
         hasRun.current = true;
-        fetchFrames();
+        // Fetch frames is done on SSE connection
+        //fetchFrames();
 
         const es = connect();
 

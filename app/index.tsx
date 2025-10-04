@@ -15,7 +15,7 @@ export default function HomeScreen() {
     Linking.openURL(`https://waze.com/ul?ll=${frames[currentIndex].data.lat},${frames[currentIndex].data.lon}&navigate=yes`);
   };
 
-  // --- Conversion décimale vers format DMS ---
+// --- Convert decimal to sexagesimal ---
 function formatDMS(value: number | null, isLat: boolean) {
   if(!value) return "";
   const abs = Math.abs(value);
@@ -29,37 +29,53 @@ function formatDMS(value: number | null, isLat: boolean) {
     .padStart(2, "0")}"${dir}`;
 }
 
-// --- Mise en forme des octets de la trame ---
+// --- Format bytes ---
 function formatData(data: string) {
   return data.match(/.{1,2}/g)?.join(" ") || data;
 }
 
 // --- Calcul du Maidenhead Locator ---
-function calculateMaidenhead(lat: number | null, lon: number | null) {
-  if(!lat || ! lon) return "";
+function calculateMaidenhead(lat: number | null, lon: number | null): string {
+  if(!lat || !lon) return "";
+  // Adjust range
   lon += 180;
   lat += 90;
 
+  // Field (2 chars)
   const A = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-  const a = "abcdefghijklmnopqrstuvwx";
-
   const lonField = Math.floor(lon / 20);
   const latField = Math.floor(lat / 10);
 
+  // Square (2 digits)
   const lonSquare = Math.floor((lon % 20) / 2);
-  const latSquare = Math.floor(lat % 10 / 1);
+  const latSquare = Math.floor(lat % 10);
 
-  const lonSubSquare = Math.floor(((lon % 2) * 12));
-  const latSubSquare = Math.floor(((lat % 1) * 24));
+  // Subsquare (2 chars)
+  const lonSub = Math.floor(((lon % 2) * 12));
+  const latSub = Math.floor(((lat % 1) * 24));
 
-  return (
+  // Extended square (2 digits)
+  const lonExt = Math.floor(((lon * 60) % 5) / 0.5);
+  const latExt = Math.floor(((lat * 60) % 2.5) / 0.25);
+
+  // Extended subsquare (2 chars)
+  const lonExtSub = Math.floor((((lon * 60) % 0.5) / (0.5 / 24)));
+  const latExtSub = Math.floor((((lat * 60) % 0.25) / (0.25 / 24)));
+
+  // Build locator (10 chars)
+  const locator =
     A[lonField] +
     A[latField] +
     lonSquare.toString() +
     latSquare.toString() +
-    a[lonSubSquare] +
-    a[latSubSquare]
-  );
+    A[lonSub] +
+    A[latSub] +
+    lonExt.toString() +
+    latExt.toString() +
+    A[lonExtSub] +
+    A[latExtSub];
+
+  return locator.toUpperCase();
 }
 
   if (!frames[currentIndex]) {
@@ -70,10 +86,12 @@ function calculateMaidenhead(lat: number | null, lon: number | null) {
     );
   }
 
-  const isBCH1ok = frames[currentIndex].data.bch1.toUpperCase() === "OK";
+  const isBCH1ok = frames[currentIndex].data.bch1 && frames[currentIndex].data.bch1.toUpperCase() === "OK";
   const isBCH2ok = frames[currentIndex].data.bch2 && frames[currentIndex].data.bch2.toUpperCase() === "OK";
-  const hasError = !(isBCH1ok && isBCH2ok);
+  const hasError = (!isBCH1ok) || (frames[currentIndex].data.bch2 && !isBCH2ok);
   const hasLocation = (frames[currentIndex].lat !== null && frames[currentIndex].lat !== null);
+  const lat = frames[currentIndex].lat ? frames[currentIndex].lat : 0;
+  const lon = frames[currentIndex].lon ? frames[currentIndex].lon : 0;
 
   const maiden = calculateMaidenhead(frames[currentIndex].lat, frames[currentIndex].lon);
 
@@ -94,30 +112,35 @@ function calculateMaidenhead(lat: number | null, lon: number | null) {
           <Text style={styles.value}>{frames[currentIndex].data.protocolAddData}</Text>
         </View>
 
-        {hasLocation && (
         <View style={styles.section}>
-          <View style={styles.rowBetween}>
-            <Text style={styles.label}>Location:</Text>
-            <Text style={styles.locator}>{maiden}</Text>
-          </View>
+          <Text style={styles.label}>Location:&nbsp;&nbsp;&nbsp;&nbsp;</Text>
           <Text style={styles.value}>{frames[currentIndex].data.country}</Text>
+          {hasLocation ? (
+          <>
           <Text style={styles.value}>
             {formatDMS(frames[currentIndex].lat, true)}, {formatDMS(frames[currentIndex].lon, false)}
           </Text>
           <Text style={styles.value}>
-            {frames[currentIndex].lat.toFixed(6)}, {frames[currentIndex].lon.toFixed(6)}
+            {lat.toFixed(6)}, {lon.toFixed(6)}
           </Text>
-        </View>)}
+          <Text style={styles.locator}>{maiden}</Text>
+          </>  ) : (
+          <Text style={styles.value}>GPS not synchronized</Text>
+          )
+          }
+        </View>
 
         <View style={styles.section}>
           <Text style={styles.label}>Control:</Text>
           <View style={styles.row}>
+            {frames[currentIndex].data.bch1 && (
             <Text style={[styles.value, { color: isBCH1ok ? "#00FF00" : "#FF4444" }]}>
-              BCH1-{frames[currentIndex].data.bch1}
-            </Text>
+              BCH1-{frames[currentIndex].data.bch1.toUpperCase()}
+            </Text>)}
+            {frames[currentIndex].data.bch2 && (
             <Text style={[styles.value, { color: isBCH2ok ? "#00FF00" : "#FF4444", marginLeft: 10 }]}>
-              BCH2-{frames[currentIndex].data.bch2}
-            </Text>
+              BCH2-{frames[currentIndex].data.bch2.toUpperCase()}
+            </Text>)}
           </View>
         </View>
 
@@ -127,11 +150,12 @@ function calculateMaidenhead(lat: number | null, lon: number | null) {
             {frames[currentIndex].data.date} - {frames[currentIndex].data.time}
           </Text>
         </View>
-
+      
+        {frames[currentIndex].data.serial && (
         <View style={styles.section}>
           <Text style={styles.label}>Serial #:</Text>
           <Text style={styles.value}>{frames[currentIndex].data.serial}</Text>
-        </View>
+        </View>)}
 
         <View style={styles.section}>
           <Text style={styles.label}>Main loc. device:</Text>
@@ -150,10 +174,21 @@ function calculateMaidenhead(lat: number | null, lon: number | null) {
 
         <View style={styles.section}>
           <Text style={styles.label}>Data:</Text>
-          <Text style={styles.value}>{formatData(frames[currentIndex].data.data)}</Text>
+          {frames[currentIndex].data.data ? (
+              <>
+                <Text style={styles.value}>
+                  {formatData(frames[currentIndex].data.data).slice(0, 24)} 
+                </Text>
+                <Text style={styles.value}>
+                  {formatData(frames[currentIndex].data.data).slice(24)} {/* le reste */}
+                </Text>
+              </>
+            ) : (
+              <Text style={styles.value}>—</Text>
+            )}
         </View>
       </ScrollView>
-      {frames[currentIndex] && frames[currentIndex].data.lat && frames[currentIndex].data.lon && (
+      {frames[currentIndex].data.lat && frames[currentIndex].data.lon && (
         <View style={{marginTop:12}}>
           <TouchableOpacity onPress={openMaps}>
             <Text style={styles.link}>Open in Google Maps</Text>
@@ -187,7 +222,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#001000",
   },
   waitText: {
-    fontFamily: "Courier",
+    //fontFamily: "Courier",
     color: "#00FFFF",
     fontSize: 18,
   },
@@ -195,9 +230,9 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   title: {
-    fontFamily: "Courier",
-    color: "#00BFFF",
-    fontSize: 20,
+    //fontFamily: "Courier",
+    color: "#00FFFF",
+    fontSize: 24,
     textAlign: "center",
     marginBottom: 8,
   },
@@ -205,8 +240,9 @@ const styles = StyleSheet.create({
     marginVertical: 4,
   },
   label: {
-    fontFamily: "Courier",
+    //fontFamily: "Courier",
     color: "#00FFFF",
+    fontWeight: "bold",
     fontSize: 14,
   },
   value: {
@@ -216,7 +252,7 @@ const styles = StyleSheet.create({
   },
   locator: {
     fontFamily: "Courier",
-    color: "#FFFF00",
+    color: "#FFFFFF",
     fontSize: 14,
   },
   row: {
@@ -225,7 +261,7 @@ const styles = StyleSheet.create({
   },
   rowBetween: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    //justifyContent: "space-between",
   },
   link:{ color:'cyan', marginVertical:4 },
 });
