@@ -90,6 +90,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   text: {
+    fontFamily: "Courier",
     position: "absolute",
     color: "white",
     fontSize: 14,

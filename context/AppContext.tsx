@@ -10,14 +10,26 @@ const DEVICE_URL = 'http://sarsatjrx.local';
 
 type AppContextType = {
   eventSource: EventSource | null;
+  time: string | null;
+  sdMounted: boolean;
+  discriOn: boolean;
+  batteryPercentage: number | null;
 };
 
 export const AppContext = createContext<AppContextType>({
   eventSource: null,
+  time: null,
+  sdMounted: false,
+  discriOn: false,
+  batteryPercentage: null,
 });
 
 export const AppContextProvider = ({ children }: { children: React.ReactNode }) => {
     const [eventSource, setEventSource] = useState<EventSource | null>(null);
+    const [time, setTime] = useState<string | null>(null);
+    const [sdMounted, setSdMounted] = useState<boolean>(false);
+    const [discriOn, setDiscriOn] = useState<boolean>(false);
+    const [batteryPercentage, setBatteryPercentage] = useState<number | null>(null);
     const { frames, addFrame, setCountdown } = useContext(FrameContext);
     const reconnectTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
     const retryDelay = useRef(1000); // 1s au départ
@@ -46,6 +58,8 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
     const soundOK = useAudioPlayer(require('../assets/beep.wav'));
     const soundKO = useAudioPlayer(require('../assets/beep.wav'));
     const soundError = useAudioPlayer(require('../assets/beep.wav'));
+    const beepHigh = useAudioPlayer(require('../assets/beep.wav'));
+    const beepLow = useAudioPlayer(require('../assets/beep.wav'));
 
     function playSoundOK() {
         soundOK.seekTo(0);
@@ -60,6 +74,16 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
     function playSoundError() {
         soundError.seekTo(0);
         soundError.play();
+    }
+
+    function playBeepHigh() {
+        beepHigh.seekTo(0);
+        beepHigh.play();
+    }
+
+    function playBeepLow() {
+        beepLow.seekTo(0);
+        beepLow.play();
     }
 
     async function fetchFrames() {
@@ -103,10 +127,22 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
         if (e.data.startsWith('tick;')) 
         {
             const parts = e.data.split(';');
-            if(parts.length==3)
+            if(parts.length==6)
             {
                 const val = parseInt(parts[1]);
+                if(val > 1 && val <= 5)
+                {
+                    playBeepLow();
+                }
+                else if(val == 1)
+                {
+                    playBeepHigh();
+                }
                 setCountdown(val);
+                setTime(parts[5]);
+                setSdMounted(parts[2] === "1");
+                setDiscriOn(parts[3] === "1");
+                setBatteryPercentage(parseInt(parts[4]));
             }
         } 
         else if (e.data.startsWith('frame'))
@@ -164,7 +200,7 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
     }, [fetchFrames]);
 
   return (
-    <AppContext.Provider value={{ eventSource }}>
+    <AppContext.Provider value={{ eventSource, time, sdMounted, discriOn, batteryPercentage }}>
       {children}
     </AppContext.Provider>
   );
