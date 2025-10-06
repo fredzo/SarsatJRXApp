@@ -57,11 +57,11 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
         retryDelay.current = Math.min(retryDelay.current * 2, maxDelay);
     };
 
-    const soundOK = useAudioPlayer(require('../assets/beep.wav'));
-    const soundKO = useAudioPlayer(require('../assets/beep.wav'));
-    const soundError = useAudioPlayer(require('../assets/beep.wav'));
-    const beepHigh = useAudioPlayer(require('../assets/beep.wav'));
-    const beepLow = useAudioPlayer(require('../assets/beep.wav'));
+    const soundOK = useAudioPlayer(require('../assets/ok.mp3'));
+    const soundKO = useAudioPlayer(require('../assets/ko.mp3'));
+    const soundError = useAudioPlayer(require('../assets/invalid.mp3'));
+    const beepHigh = useAudioPlayer(require('../assets/counth.mp3'));
+    const beepLow = useAudioPlayer(require('../assets/countl.mp3'));
 
     function playSoundOK() {
         soundOK.seekTo(0);
