@@ -25,6 +25,7 @@ app.add_middleware(
 # Stocke les trames reçues
 frames = []
 countdown = 10
+battery = 100
 
 
 def generate_frame():
@@ -81,8 +82,12 @@ async def sse():
     """Send SSE events for new frames and countdown ticks."""
     async def event_generator():
         global countdown
+        global battery
         while True:
             await asyncio.sleep(1)
+            battery-= 5
+            if battery < 0:
+                battery = 100
             countdown -= 1
             if countdown <= 0:
                 frame = generate_frame()
@@ -91,6 +96,6 @@ async def sse():
                 frameString = "\n".join(f"data: {k}={v}" for k, v in frame.items())
                 yield f"data: frame;true,true\n{frameString}\n\n"
             else:
-                yield f"data: tick;{countdown};12:00:00\n\n"
+                yield f"data: tick;{countdown};1;1;{battery};12:00:00\n\n"
 
     return StreamingResponse(event_generator(), media_type="text/event-stream")

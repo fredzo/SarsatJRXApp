@@ -1,10 +1,11 @@
 import { FrameContext } from "@/providers/FrameProvider";
-import { useAudioPlayer } from 'expo-audio';
+import { AudioModule, useAudioPlayer } from 'expo-audio';
 import React, { createContext, useContext, useEffect, useRef, useState } from "react";
+import { AppState } from "react-native";
 import EventSource, { MessageEvent } from 'react-native-sse';
 
-const DEVICE_URL = 'http://sarsatjrx.local';
-//const DEVICE_URL = 'http://localhost';
+//const DEVICE_URL = 'http://sarsatjrx.local';
+const DEVICE_URL = 'http://localhost';
 //const DEVICE_URL = 'http://10.0.2.2';
 //const DEVICE_URL = 'http://10.157.161.213';
 
@@ -35,6 +36,7 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
     const retryDelay = useRef(1000); // 1s au départ
     const maxDelay = 5000; // 5s max
     const hasRun = useRef(false);
+    const inBackground = useRef(false); // True when app is in background
 
     const clearReconnectTimer = () => {
         if (reconnectTimeout.current) {
@@ -156,7 +158,7 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
     const connect = () => {
         clearReconnectTimer();
         console.log("🔌 EventSource connection...");
-        const es = new EventSource(DEVICE_URL+"/sse"); 
+        const es = new EventSource(DEVICE_URL+"/sse");
 
         es.addEventListener("open", () => {
             console.log("✅ EventSource connected");
@@ -189,7 +191,24 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
         // Fetch frames is done on SSE connection
         //fetchFrames();
 
+        AudioModule.setAudioModeAsync({
+            shouldPlayInBackground: true,
+            interruptionMode: 'duckOthers',
+            interruptionModeAndroid: 'duckOthers',
+            playsInSilentMode: true,
+            shouldRouteThroughEarpiece: true,
+        });
+
         const es = connect();
+
+        const subscription = AppState.addEventListener("change", (state) => {
+        if (state === "active") {
+            inBackground.current = false;
+            connect();
+        } else if (state === "background") {
+            inBackground.current = true;
+        }
+        });
 
         return () => {
             // Keep resources since app context can be reloaded on frame provider changes

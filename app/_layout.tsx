@@ -1,4 +1,5 @@
 import { AppContextProvider } from '@/context/AppContext';
+import { useKeepAwake } from "expo-keep-awake";
 import { Tabs } from 'expo-router';
 import { ExternalLink, MapPin, RadioTower, Settings } from 'lucide-react-native';
 import React from 'react';
@@ -8,6 +9,7 @@ import Header from '../components/Header';
 import { FrameProvider } from '../providers/FrameProvider';
 
 export default function Layout() {
+  useKeepAwake();
   return (
     <FrameProvider>
       <AppContextProvider>
