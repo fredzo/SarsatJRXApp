@@ -5,9 +5,9 @@ import { AppState } from "react-native";
 import EventSource, { MessageEvent } from 'react-native-sse';
 
 //const DEVICE_URL = 'http://sarsatjrx.local';
-const DEVICE_URL = 'http://localhost';
+//const DEVICE_URL = 'http://localhost';
 //const DEVICE_URL = 'http://10.0.2.2';
-//const DEVICE_URL = 'http://10.157.161.213';
+const DEVICE_URL = 'http://10.157.161.213';
 
 type AppContextType = {
   eventSource: EventSource | null;
@@ -33,7 +33,7 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
     const [sdMounted, setSdMounted] = useState<boolean>(false);
     const [discriOn, setDiscriOn] = useState<boolean>(false);
     const [batteryPercentage, setBatteryPercentage] = useState<number | null>(null);
-    const { frames, currentIndex, addFrame, setCountdown } = useContext(FrameContext);
+    const { frames, addFrame, setCountdown } = useContext(FrameContext);
     const reconnectTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
     const retryDelay = useRef(1000); // 1s au départ
     const maxDelay = 5000; // 5s max
@@ -211,6 +211,13 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
 
         globalEventSource.addEventListener("error", (event) => {
             console.log("⚠️ SSE error, will retry…");
+            globalEventSource?.close();
+            setEventSource(null);
+            scheduleReconnect();
+        });
+
+        globalEventSource.addEventListener("close", (event) => {
+            console.log("⚠️ SSE close, will retry…");
             globalEventSource?.close();
             setEventSource(null);
             scheduleReconnect();
