@@ -1,18 +1,18 @@
 import React, { useContext } from "react";
 import { Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { FrameContext } from '../providers/FrameProvider';
+import { FrameContext, FrameState } from '../providers/FrameProvider';
 
 
 export default function HomeScreen() {
-  const { frames, currentIndex } = useContext(FrameContext);
+  const { currentFrame } = useContext(FrameContext);
 
   const openMaps = () => {
-    if (!frames[currentIndex] || !frames[currentIndex].data.lat || !frames[currentIndex].data.lon) return;
-    Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${frames[currentIndex].data.lat},${frames[currentIndex].data.lon}`);
+    if (!currentFrame?.hasLocation) return;
+    Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${currentFrame.lat},${currentFrame.lon}`);
   };
   const openWaze = () => {
-    if (!frames[currentIndex] || !frames[currentIndex].data.lat || !frames[currentIndex].data.lon) return;
-    Linking.openURL(`https://waze.com/ul?ll=${frames[currentIndex].data.lat},${frames[currentIndex].data.lon}&navigate=yes`);
+    if (!currentFrame?.hasLocation) return;
+    Linking.openURL(`https://waze.com/ul?ll=${currentFrame.lat},${currentFrame.lon}&navigate=yes`);
   };
 
 // --- Convert decimal to sexagesimal ---
@@ -78,7 +78,7 @@ function calculateMaidenhead(lat: number | null, lon: number | null): string {
   return locator.toUpperCase();
 }
 
-  if (!frames[currentIndex]) {
+  if (!currentFrame) {
     return (
       <View style={styles.waitContainer}>
         <Text style={styles.waitText}>Waiting for the wave...</Text>
@@ -86,42 +86,35 @@ function calculateMaidenhead(lat: number | null, lon: number | null): string {
     );
   }
 
-  const isBCH1ok = frames[currentIndex].data.bch1 && frames[currentIndex].data.bch1.toUpperCase() === "OK";
-  const isBCH2ok = frames[currentIndex].data.bch2 && frames[currentIndex].data.bch2.toUpperCase() === "OK";
-  const hasError = (!isBCH1ok) || (frames[currentIndex].data.bch2 && !isBCH2ok);
-  const hasLocation = (frames[currentIndex].lat !== null && frames[currentIndex].lat !== null);
-  const lat = frames[currentIndex].lat ? frames[currentIndex].lat : 0;
-  const lon = frames[currentIndex].lon ? frames[currentIndex].lon : 0;
-
-  const maiden = calculateMaidenhead(frames[currentIndex].lat, frames[currentIndex].lon);
+  const maiden = calculateMaidenhead(currentFrame.lat, currentFrame.lon);
 
   return (
     <View
       style={[
         styles.container,
-        hasError ? styles.containerError : undefined,
+        currentFrame.state != FrameState.OK ? styles.containerError : undefined,
       ]}
     >
       <ScrollView contentContainerStyle={styles.scroll}>
-        <Text style={styles.title}>{frames[currentIndex].data.title}</Text>
+        <Text style={styles.title}>{currentFrame.data.title}</Text>
 
         <View style={styles.section}>
           <Text style={styles.label}>Info:</Text>
-          <Text style={styles.value}>{frames[currentIndex].data.protocol}</Text>
-          <Text style={styles.value}>{frames[currentIndex].data.protocolDesc}</Text>
-          <Text style={styles.value}>{frames[currentIndex].data.protocolAddData}</Text>
+          <Text style={styles.value}>{currentFrame.data.protocol}</Text>
+          <Text style={styles.value}>{currentFrame.data.protocolDesc}</Text>
+          <Text style={styles.value}>{currentFrame.data.protocolAddData}</Text>
         </View>
 
         <View style={styles.section}>
           <Text style={styles.label}>Location:&nbsp;&nbsp;&nbsp;&nbsp;</Text>
-          <Text style={styles.value}>{frames[currentIndex].data.country}</Text>
-          {hasLocation ? (
+          <Text style={styles.value}>{currentFrame.data.country}</Text>
+          {currentFrame.hasLocation ? (
           <>
           <Text style={styles.value}>
-            {formatDMS(frames[currentIndex].lat, true)}, {formatDMS(frames[currentIndex].lon, false)}
+            {formatDMS(currentFrame.lat, true)}, {formatDMS(currentFrame.lon, false)}
           </Text>
           <Text style={styles.value}>
-            {lat.toFixed(6)}, {lon.toFixed(6)}
+            {currentFrame.lat.toFixed(6)}, {currentFrame.lon.toFixed(6)}
           </Text>
           <Text style={styles.locator}>{maiden}</Text>
           </>  ) : (
@@ -133,13 +126,13 @@ function calculateMaidenhead(lat: number | null, lon: number | null): string {
         <View style={styles.section}>
           <Text style={styles.label}>Control:</Text>
           <View style={styles.row}>
-            {frames[currentIndex].data.bch1 && (
-            <Text style={[styles.value, { color: isBCH1ok ? "#00FF00" : "#FF4444" }]}>
-              BCH1-{frames[currentIndex].data.bch1.toUpperCase()}
+            {currentFrame.data.bch1 && (
+            <Text style={[styles.value, { color: currentFrame.bch1Ok ? "#00FF00" : "#FF4444" }]}>
+              BCH1-{currentFrame.data.bch1.toUpperCase()}
             </Text>)}
-            {frames[currentIndex].data.bch2 && (
-            <Text style={[styles.value, { color: isBCH2ok ? "#00FF00" : "#FF4444", marginLeft: 10 }]}>
-              BCH2-{frames[currentIndex].data.bch2.toUpperCase()}
+            {currentFrame.data.bch2 && (
+            <Text style={[styles.value, { color: currentFrame.bch2Ok ? "#00FF00" : "#FF4444", marginLeft: 10 }]}>
+              BCH2-{currentFrame.data.bch2.toUpperCase()}
             </Text>)}
           </View>
         </View>
@@ -147,40 +140,40 @@ function calculateMaidenhead(lat: number | null, lon: number | null): string {
         <View style={styles.section}>
           <Text style={styles.label}>Date:</Text>
           <Text style={styles.value}>
-            {frames[currentIndex].data.date} - {frames[currentIndex].data.time}
+            {currentFrame.data.date} - {currentFrame.data.time}
           </Text>
         </View>
       
-        {frames[currentIndex].data.serial && (
+        {currentFrame.data.serial && (
         <View style={styles.section}>
           <Text style={styles.label}>Serial #:</Text>
-          <Text style={styles.value}>{frames[currentIndex].data.serial}</Text>
+          <Text style={styles.value}>{currentFrame.data.serial}</Text>
         </View>)}
 
         <View style={styles.section}>
           <Text style={styles.label}>Main loc. device:</Text>
-          <Text style={styles.value}>{frames[currentIndex].data.mainDevice}</Text>
+          <Text style={styles.value}>{currentFrame.data.mainDevice}</Text>
         </View>
 
         <View style={styles.section}>
           <Text style={styles.label}>Aux. loc. device:</Text>
-          <Text style={styles.value}>{frames[currentIndex].data.auxDevice}</Text>
+          <Text style={styles.value}>{currentFrame.data.auxDevice}</Text>
         </View>
 
         <View style={styles.section}>
           <Text style={styles.label}>Hex ID:</Text>
-          <Text style={styles.value}>{frames[currentIndex].data.hexId}</Text>
+          <Text style={styles.value}>{currentFrame.data.hexId}</Text>
         </View>
 
         <View style={styles.section}>
           <Text style={styles.label}>Data:</Text>
-          {frames[currentIndex].data.data ? (
+          {currentFrame.data.data ? (
               <>
                 <Text style={styles.value}>
-                  {formatData(frames[currentIndex].data.data).slice(0, 24)} 
+                  {formatData(currentFrame.data.data).slice(0, 24)} 
                 </Text>
                 <Text style={styles.value}>
-                  {formatData(frames[currentIndex].data.data).slice(24)} {/* le reste */}
+                  {formatData(currentFrame.data.data).slice(24)} {/* le reste */}
                 </Text>
               </>
             ) : (
@@ -188,7 +181,7 @@ function calculateMaidenhead(lat: number | null, lon: number | null): string {
             )}
         </View>
       </ScrollView>
-      {frames[currentIndex].data.lat && frames[currentIndex].data.lon && (
+      {currentFrame.hasLocation && (
         <View style={{marginTop:12}}>
           <TouchableOpacity onPress={openMaps}>
             <Text style={styles.link}>Open in Google Maps</Text>

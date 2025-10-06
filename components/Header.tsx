@@ -48,7 +48,7 @@ export default function Header() {
       <Activity style={{ marginLeft: 4, opacity: discriOn ? 1 : 0.1 }} color="#FFFFFF"/>
       <Text style={styles.title}>SarsatJRXApp</Text>
       <View style={styles.headerRight}>
-        { batteryPercentage && (<BatteryIndicator level={batteryPercentage} />) }
+        { (batteryPercentage != undefined) && (<BatteryIndicator level={batteryPercentage} />) }
       </View>
       <View style={styles.leds}>
         {[0,1,2,3].map(i => (

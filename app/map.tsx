@@ -2,12 +2,12 @@ import { MapView, Marker, Popup } from '@netizen-teknologi/react-native-maps-lea
 import { useContext } from 'react';
 import { Platform, StyleSheet, Text, View } from 'react-native';
 import { WebView } from 'react-native-webview';
-import { FrameContext } from '../providers/FrameProvider';
+import { FrameContext, FrameState } from '../providers/FrameProvider';
 
 export default function MapScreen() {
-  const { frames, currentIndex } = useContext(FrameContext);
+  const { currentFrame } = useContext(FrameContext);
 
-  if (!frames[currentIndex] || !frames[currentIndex].lat || !frames[currentIndex].lon) {
+  if (!currentFrame?.hasLocation) {
     return (
       <View style={styles.container}>
         <Text style={styles.h1}>Map</Text>
@@ -15,13 +15,6 @@ export default function MapScreen() {
       </View>
     );
   }
-
-  const isBCH1ok = frames[currentIndex].data.bch1 && frames[currentIndex].data.bch1.toUpperCase() === "OK";
-  const isBCH2ok = frames[currentIndex].data.bch2 && frames[currentIndex].data.bch2.toUpperCase() === "OK";
-  const hasError = (!isBCH1ok) || (frames[currentIndex].data.bch2 && !isBCH2ok);
-
-  const latitude = frames[currentIndex].lat;
-  const longitude =frames[currentIndex].lon;
 
   // console.log("Latitude = ", latitude, "Longitude =", longitude);
 
@@ -31,16 +24,17 @@ export default function MapScreen() {
     <View 
       style={[
         styles.container,
-        hasError ? styles.containerError : undefined,
-      ]}>
+        currentFrame.state != FrameState.OK ? styles.containerError : undefined,
+      ]}
+      >
       <Text style={styles.h1}>Map</Text>
         <MapView
-          center={[ latitude, longitude ]}>
+          center={[ currentFrame.lat, currentFrame.lon ]}>
           <Marker
-            position={[ latitude, longitude ]} >
+            position={[ currentFrame.lat, currentFrame.lon ]} >
               <Popup>
-                <Text>${frames[currentIndex].data.title} Beacon</Text>
-                <Text>${frames[currentIndex].data.protocolDesc}</Text>
+                <Text>{currentFrame.data.title} Beacon</Text>
+                <Text>{currentFrame.data.protocolDesc}</Text>
               </Popup>
            </Marker>
         </MapView>
@@ -63,13 +57,13 @@ export default function MapScreen() {
       <div id="map"></div>
       <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
       <script>
-        var map = L.map('map').setView([${latitude}, ${longitude}], 13);
+        var map = L.map('map').setView([${currentFrame.lat}, ${currentFrame.lon}], 13);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
           maxZoom: 19
         }).addTo(map);
-        L.marker([${latitude}, ${longitude}])
+        L.marker([${currentFrame.lat}, ${currentFrame.lon}])
           .addTo(map)
-          .bindPopup('${frames[currentIndex].data.title} Beacon<br/>${frames[currentIndex].data.protocolDesc}')
+          .bindPopup('${currentFrame.data.title} Beacon<br/>${currentFrame.data.protocolDesc}')
           .openPopup();
       </script>
     </body>
@@ -80,8 +74,9 @@ export default function MapScreen() {
     <View 
       style={[
         styles.container,
-        hasError ? styles.containerError : undefined,
-      ]}>
+        currentFrame.state != FrameState.OK ? styles.containerError : undefined,
+      ]}
+      >
       <WebView
         originWhitelist={['*']}
         source={{ html: leafletHtml }}

@@ -25,41 +25,25 @@ export const AppContext = createContext<AppContextType>({
   batteryPercentage: null,
 });
 
+let globalEventSource:EventSource | null = null;
+
 export const AppContextProvider = ({ children }: { children: React.ReactNode }) => {
     const [eventSource, setEventSource] = useState<EventSource | null>(null);
     const [time, setTime] = useState<string | null>(null);
     const [sdMounted, setSdMounted] = useState<boolean>(false);
     const [discriOn, setDiscriOn] = useState<boolean>(false);
     const [batteryPercentage, setBatteryPercentage] = useState<number | null>(null);
-    const { frames, addFrame, setCountdown } = useContext(FrameContext);
+    const { frames, currentIndex, addFrame, setCountdown } = useContext(FrameContext);
     const reconnectTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
     const retryDelay = useRef(1000); // 1s au départ
     const maxDelay = 5000; // 5s max
     const hasRun = useRef(false);
     const inBackground = useRef(false); // True when app is in background
 
-    const clearReconnectTimer = () => {
-        if (reconnectTimeout.current) {
-        clearTimeout(reconnectTimeout.current);
-        reconnectTimeout.current = null;
-        }
-    };
-
-    const scheduleReconnect = () => {
-            clearReconnectTimer();
-            console.log(`🔁 Reconnection attempt in ${retryDelay.current / 1000}s...`);
-            reconnectTimeout.current = setTimeout(() => {
-            reconnectTimeout.current = null;
-            connect();
-        }, retryDelay.current);
-
-        // Exponential reconnection delay
-        retryDelay.current = Math.min(retryDelay.current * 2, maxDelay);
-    };
-
     const soundOK = useAudioPlayer(require('../assets/ok.mp3'));
     const soundKO = useAudioPlayer(require('../assets/ko.mp3'));
     const soundError = useAudioPlayer(require('../assets/invalid.mp3'));
+    const soundFiltered = useAudioPlayer(require('../assets/filtered.mp3'));
     const beepHigh = useAudioPlayer(require('../assets/counth.mp3'));
     const beepLow = useAudioPlayer(require('../assets/countl.mp3'));
 
@@ -76,6 +60,11 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
     function playSoundError() {
         soundError.seekTo(0);
         soundError.play();
+    }
+
+    function playSoundFiltered() {
+        soundFiltered.seekTo(0);
+        soundFiltered.play();
     }
 
     function playBeepHigh() {
@@ -149,40 +138,85 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
         } 
         else if (e.data.startsWith('frame'))
         {
-            playSoundOK();
-            //console.log("Event data: ",e.data);
-            parseFrame(e.data.split("\n").slice(1).join("\n"));
+            const parts = e.data.split(';');
+            if(parts.length==4)
+            {
+                const valid = parts[1] === "1";
+                const filtered = parts[2] === "1";
+                const error = parts[3] === "1";
+                //console.log("Event data: ",e.data);
+                if(valid && !filtered)
+                {
+                    parseFrame(e.data.split("\n").slice(1).join("\n"));
+                    error ? playSoundKO() : playSoundOK();
+                }
+                else
+                {
+                    valid ? (error ? playSoundKO() : playSoundFiltered()) : playSoundError();
+                }
+            }
         }
     };
 
-    const connect = () => {
-        clearReconnectTimer();
-        console.log("🔌 EventSource connection...");
-        const es = new EventSource(DEVICE_URL+"/sse");
+    const clearReconnectTimer = () => {
+        if (reconnectTimeout.current) {
+        clearTimeout(reconnectTimeout.current);
+        reconnectTimeout.current = null;
+        }
+    };
 
-        es.addEventListener("open", () => {
+    const scheduleReconnect = () => {
+            clearReconnectTimer();
+            console.log(`🔁 Reconnection attempt in ${retryDelay.current / 1000}s...`);
+            reconnectTimeout.current = setTimeout(() => {
+            reconnectTimeout.current = null;
+            connect();
+        }, retryDelay.current);
+
+        // Exponential reconnection delay
+        retryDelay.current = Math.min(retryDelay.current * 2, maxDelay);
+    };
+
+    const clearGlobalEventSource = () => {
+        clearReconnectTimer();
+        if((globalEventSource))
+        {
+            globalEventSource.removeAllEventListeners();
+            globalEventSource.close();
+            globalEventSource = null;
+        }
+
+    };
+
+
+    const connect = () => {
+        clearGlobalEventSource();
+        console.log("🔌 EventSource connection...");
+        globalEventSource = new EventSource(DEVICE_URL+"/sse");
+
+        globalEventSource.addEventListener("open", () => {
             console.log("✅ EventSource connected");
             retryDelay.current = 1000; // reset reconnection delay
-            setEventSource(es);
+            setEventSource(globalEventSource);
             if(frames.length == 0)
             {   // No frames yet, check for frames on the decoder
                 fetchFrames();
             }
         });
 
-        es.addEventListener("message", (event) => {
+        globalEventSource.addEventListener("message", (event) => {
             console.log("📩 SSE received :", event.data);
             handleMessage(event);
         });
 
-        es.addEventListener("error", (event) => {
+        globalEventSource.addEventListener("error", (event) => {
             console.log("⚠️ SSE error, will retry…");
-            es.close();
+            globalEventSource?.close();
             setEventSource(null);
             scheduleReconnect();
         });
 
-        return es;
+        return globalEventSource;
     };
 
     useEffect(() => {
@@ -199,7 +233,7 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
             shouldRouteThroughEarpiece: true,
         });
 
-        const es = connect();
+        connect();
 
         const subscription = AppState.addEventListener("change", (state) => {
         if (state === "active") {
@@ -213,7 +247,7 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
         return () => {
             // Keep resources since app context can be reloaded on frame provider changes
             /*console.log("👋 Closing EventSource");
-            es.close();
+            globalEventSource.close();
             if (reconnectTimeout.current) clearTimeout(reconnectTimeout.current);*/
         };
     }, [fetchFrames]);

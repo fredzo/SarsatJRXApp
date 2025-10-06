@@ -90,11 +90,17 @@ async def sse():
                 battery = 100
             countdown -= 1
             if countdown <= 0:
-                frame = generate_frame()
-                frames.append(frame)
-                countdown = 10
-                frameString = "\n".join(f"data: {k}={v}" for k, v in frame.items())
-                yield f"data: frame;true,true\n{frameString}\n\n"
+                valid = random.choice([1,1,1,1,1,0])
+                if valid:
+                    filtered = random.choice(["1","1","1","1","0"])
+                    error = random.choice(["1","1","1","0","0"])
+                    frame = generate_frame()
+                    frames.append(frame)
+                    countdown = 10
+                    frameString = "\n".join(f"data: {k}={v}" for k, v in frame.items())
+                    yield f"data: frame;1;{filtered};{error}\n{frameString}\n\n"
+                else:
+                    yield f"data: frame;0;1;1\n\n"
             else:
                 yield f"data: tick;{countdown};1;1;{battery};12:00:00\n\n"
 
