@@ -5,7 +5,8 @@ import { AppState } from "react-native";
 import EventSource, { MessageEvent } from 'react-native-sse';
 
 //const DEVICE_URL = 'http://sarsatjrx.local';
-const DEVICE_URL = 'http://localhost';
+//const DEVICE_URL = 'http://localhost';
+const DEVICE_URL = 'http://192.168.0.83';
 //const DEVICE_URL = 'http://10.0.2.2';
 //const DEVICE_URL = 'http://10.157.161.213';
 
@@ -174,11 +175,32 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
                 if(valid && !filtered)
                 {
                     parseFrame(e.data.split("\n").slice(1).join("\n"));
-                    error ? playSoundKO() : playSoundOK();
+                    if(error)
+                    {
+                        playSoundKO();
+                    }
+                    else
+                    {
+                        playSoundOK();
+                    }
                 }
                 else
                 {
-                    valid ? (error ? playSoundKO() : playSoundFiltered()) : playSoundError();
+                    if(valid)
+                    {
+                        if(error)
+                        {
+                            playSoundKO()
+                        }
+                        else
+                        {
+                            playSoundFiltered();
+                        }
+                    }
+                    else
+                    {
+                        playSoundError();
+                    }
                 }
             }
         }
@@ -292,11 +314,11 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
         });
 
         return () => {
-            if (timeoutRef.current) clearInterval(timeoutRef.current);
             // Keep resources since app context can be reloaded on frame provider changes
             /*console.log("👋 Closing EventSource");
             globalEventSource.close();
-            if (reconnectTimeout.current) clearTimeout(reconnectTimeout.current);*/
+            if (reconnectTimeout.current) clearTimeout(reconnectTimeout.current);
+            if (timeoutRef.current) clearInterval(timeoutRef.current);*/
         };
     }, [fetchFrames]);
 

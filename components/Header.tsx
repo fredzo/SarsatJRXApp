@@ -1,9 +1,9 @@
 import { AppContext } from '@/context/AppContext';
 import { cardSd } from '@lucide/lab';
 import { useRouter } from 'expo-router';
-import { Activity, Icon, MonitorUp, MonitorX, Settings } from 'lucide-react-native';
+import { Activity, Icon, MonitorUp, MonitorX } from 'lucide-react-native';
 import React, { useContext, useEffect, useRef } from 'react';
-import { Animated, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Animated, StyleSheet, Text, View } from 'react-native';
 
 type BatteryProps = {
   level: number;
@@ -13,7 +13,7 @@ export const BatteryIndicator: React.FC<BatteryProps> = ({ level }) => {
   const clampedLevel = Math.min(Math.max(level, 0), 100);
 
   const batteryColor =
-    clampedLevel <= 15 ? "#884040" : clampedLevel <= 30 ? "#998500" : "#00885F";
+    clampedLevel <= 15 ? "#b62d2dff" : clampedLevel <= 30 ? "#998500" : "#00885F";
 
   return (
     <View style={styles.batteryWrapper}>
@@ -68,27 +68,26 @@ export default function Header() {
   return (
     <View style={styles.header}>
       <Text style={styles.time}>{time}</Text>
-      <Icon iconNode={cardSd} style={{ marginLeft: 4, opacity: sdMounted ? 1 : 0.1 }} size={20} color="#FFFFFF"/>
-      <Activity style={{ marginLeft: 4, opacity: discriOn ? 1 : 0.1 }} color="#FFFFFF"/>
-      <Animated.View style={{ opacity: blinkAnim }}>
+      <Icon iconNode={cardSd} style={{ marginLeft: 4, paddingLeft: 10, opacity: sdMounted ? 1 : 0.1 }} size={20} color="#FFFFFF"/>
+      <Activity style={{ marginLeft: 4, paddingLeft: 10, opacity: discriOn ? 1 : 0.1 }} size={20} color="#FFFFFF"/>
+      <Animated.View style={{ opacity: blinkAnim, paddingLeft: 10 }}>
         {connected ? (
-          <MonitorUp color="lime" size={22} />
+          <MonitorUp color="#FFFFFF" size={20} />
         ) : (
-          <MonitorX color="red" size={22} />
+          <MonitorX color="#ff8484ff" size={20} />
         )}
       </Animated.View>
       <Text style={styles.title}>SarsatJRXApp</Text>
-      <View style={styles.headerRight}>
+      <View style={styles.headerBattery}>
         { (batteryPercentage != undefined) && (<BatteryIndicator level={batteryPercentage} />) }
       </View>
       <View style={styles.leds}>
-        {[0,1,2,3].map(i => (
-          <View key={i} style={[styles.led, {backgroundColor: i===0 ? 'lime' : 'gray'}]} />
-        ))}
+          <View key={0} style={[styles.led, {backgroundColor: 'lime'}]} />
+          <View key={1} style={[styles.led, {backgroundColor: 'grey'}]} />
       </View>
-      <TouchableOpacity onPress={() => router.push('/settings')}>
-        <Settings color="white" size={24} />
-      </TouchableOpacity>
+    {/* <TouchableOpacity onPress={() => router.push('/settings')}>
+        <Settings color="white" size={20} />
+      </TouchableOpacity> */ }
     </View>
   );
 }
@@ -99,15 +98,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     backgroundColor: '#022',
+    width: '100%',
     padding: 8,
   },
   headerLeft: {
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "flex-start",
     gap: 6,
   },
 
   headerRight: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderColor:'#FFFFFF',
+    borderWidth:1,
+    gap: 4,
+  },
+
+  headerBattery: {
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
@@ -117,9 +125,9 @@ const styles = StyleSheet.create({
     marginLeft: 4,
   },
   time: { fontFamily: "Courier", color: 'white', fontSize: 14 },
-  title: { color: '#3fe6e6', fontSize: 18, fontWeight: '700', width:'100%', textAlign:'center' },
+  title: { flex: 1, color: '#3fe6e6', fontSize: 18, fontWeight: '700', textAlign:'center' },
   batt: { color: 'white', fontSize: 12, width:100 },
-  leds: { flexDirection: 'row', width:100 },
+  leds: { paddingLeft: 10, flexDirection: 'row' },
   led: { width: 10, height: 10, borderRadius: 5, marginHorizontal: 2 },
   batteryWrapper: {
     flexDirection: "row",
@@ -127,7 +135,7 @@ const styles = StyleSheet.create({
   },
 
   batteryBody: {
-    width: 50,
+    width: 40,
     height: 20,
     borderWidth: 2,
     borderColor: "#FFFFFF",
