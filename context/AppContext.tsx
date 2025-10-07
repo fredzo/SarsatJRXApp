@@ -50,31 +50,50 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
     function playSoundOK() {
         soundOK.seekTo(0);
         soundOK.play();
+        setTimeout(() => {
+            soundOK.pause();
+        }, 250); // Pause sound at the end to stop ducking other audio sources
+
     }
 
     function playSoundKO() {
         soundKO.seekTo(0);
         soundKO.play();
+        setTimeout(() => {
+            soundKO.pause();
+        }, 250); // Pause sound at the end to stop ducking other audio sources
     }
 
     function playSoundError() {
         soundError.seekTo(0);
         soundError.play();
+        setTimeout(() => {
+            soundError.pause();
+        }, 350); // Pause sound at the end to stop ducking other audio sources
     }
 
     function playSoundFiltered() {
         soundFiltered.seekTo(0);
         soundFiltered.play();
+        setTimeout(() => {
+            soundFiltered.pause();
+        }, 350); // Pause sound at the end to stop ducking other audio sources
     }
 
     function playBeepHigh() {
         beepHigh.seekTo(0);
         beepHigh.play();
+        setTimeout(() => {
+            beepHigh.pause();
+        }, 300); // Pause sound at the end to stop ducking other audio sources
     }
 
     function playBeepLow() {
         beepLow.seekTo(0);
         beepLow.play();
+        setTimeout(() => {
+            beepLow.pause();
+        }, 300); // Pause sound at the end to stop ducking other audio sources
     }
 
     async function fetchFrames() {
@@ -83,7 +102,7 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
             const text = await resp.text();
             text.split("\n#\n").forEach(line => 
             {
-            parseFrame(line);
+                parseFrame(line);
             });
         } catch {}
     }
@@ -237,7 +256,7 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
             interruptionMode: 'duckOthers',
             interruptionModeAndroid: 'duckOthers',
             playsInSilentMode: true,
-            shouldRouteThroughEarpiece: true,
+            shouldRouteThroughEarpiece: false,
         });
 
         connect();
