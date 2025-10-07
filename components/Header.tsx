@@ -1,9 +1,9 @@
 import { AppContext } from '@/context/AppContext';
 import { cardSd } from '@lucide/lab';
 import { useRouter } from 'expo-router';
-import { Activity, Icon, Settings } from 'lucide-react-native';
-import React, { useContext } from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Activity, Icon, MonitorUp, MonitorX, Settings } from 'lucide-react-native';
+import React, { useContext, useEffect, useRef } from 'react';
+import { Animated, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 type BatteryProps = {
   level: number;
@@ -39,13 +39,44 @@ export const BatteryIndicator: React.FC<BatteryProps> = ({ level }) => {
 
 export default function Header() {
   const router = useRouter();
-  const { time, sdMounted, discriOn, batteryPercentage } = useContext(AppContext);
+  const { time, sdMounted, discriOn, batteryPercentage, connected } = useContext(AppContext);
+  const blinkAnim = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    if (!connected) {
+      // Start blinking animation
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(blinkAnim, {
+            toValue: 0.2,
+            duration: 500,
+            useNativeDriver: true,
+          }),
+          Animated.timing(blinkAnim, {
+            toValue: 1,
+            duration: 500,
+            useNativeDriver: true,
+          }),
+        ])
+      ).start();
+    } else {
+      // Stop blinking
+      blinkAnim.setValue(1);
+    }
+  }, [connected]);  
 
   return (
     <View style={styles.header}>
       <Text style={styles.time}>{time}</Text>
       <Icon iconNode={cardSd} style={{ marginLeft: 4, opacity: sdMounted ? 1 : 0.1 }} size={20} color="#FFFFFF"/>
       <Activity style={{ marginLeft: 4, opacity: discriOn ? 1 : 0.1 }} color="#FFFFFF"/>
+      <Animated.View style={{ opacity: blinkAnim }}>
+        {connected ? (
+          <MonitorUp color="lime" size={22} />
+        ) : (
+          <MonitorX color="red" size={22} />
+        )}
+      </Animated.View>
       <Text style={styles.title}>SarsatJRXApp</Text>
       <View style={styles.headerRight}>
         { (batteryPercentage != undefined) && (<BatteryIndicator level={batteryPercentage} />) }

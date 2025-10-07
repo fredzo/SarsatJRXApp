@@ -5,40 +5,47 @@ import { AppState } from "react-native";
 import EventSource, { MessageEvent } from 'react-native-sse';
 
 //const DEVICE_URL = 'http://sarsatjrx.local';
-//const DEVICE_URL = 'http://localhost';
+const DEVICE_URL = 'http://localhost';
 //const DEVICE_URL = 'http://10.0.2.2';
-const DEVICE_URL = 'http://10.157.161.213';
+//const DEVICE_URL = 'http://10.157.161.213';
 
 type AppContextType = {
-  eventSource: EventSource | null;
   time: string | null;
   sdMounted: boolean;
   discriOn: boolean;
   batteryPercentage: number | null;
+  connected: boolean;
 };
 
 export const AppContext = createContext<AppContextType>({
-  eventSource: null,
   time: null,
   sdMounted: false,
   discriOn: false,
   batteryPercentage: null,
+  connected:false,
 });
 
 let globalEventSource:EventSource | null = null;
 
 export const AppContextProvider = ({ children }: { children: React.ReactNode }) => {
-    const [eventSource, setEventSource] = useState<EventSource | null>(null);
+    // Header info
     const [time, setTime] = useState<string | null>(null);
     const [sdMounted, setSdMounted] = useState<boolean>(false);
     const [discriOn, setDiscriOn] = useState<boolean>(false);
     const [batteryPercentage, setBatteryPercentage] = useState<number | null>(null);
+    // Connection management
     const { frames, addFrame, setCountdown } = useContext(FrameContext);
     const reconnectTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
     const retryDelay = useRef(1000); // 1s au départ
     const maxDelay = 5000; // 5s max
     const hasRun = useRef(false);
     const inBackground = useRef(false); // True when app is in background
+    // Keep track on the latest frames status
+    const framesRef = useRef(frames);
+    // Connection status
+    const [connected, setConnected] = useState(false);
+    const lastMessageRef = useRef<number>(Date.now());
+    const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     const soundOK = useAudioPlayer(require('../assets/ok.mp3'));
     const soundKO = useAudioPlayer(require('../assets/ko.mp3'));
@@ -185,11 +192,11 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
     };
 
     const scheduleReconnect = () => {
-            clearReconnectTimer();
+            if (reconnectTimeout.current) return; // Reconnection already pending
             console.log(`🔁 Reconnection attempt in ${retryDelay.current / 1000}s...`);
             reconnectTimeout.current = setTimeout(() => {
-            reconnectTimeout.current = null;
             connect();
+            reconnectTimeout.current = null;
         }, retryDelay.current);
 
         // Exponential reconnection delay
@@ -216,8 +223,7 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
         globalEventSource.addEventListener("open", () => {
             console.log("✅ EventSource connected");
             retryDelay.current = 1000; // reset reconnection delay
-            setEventSource(globalEventSource);
-            if(frames.length == 0)
+            if(framesRef.current.length == 0) // Make sure we have latest frames length value
             {   // No frames yet, check for frames on the decoder
                 fetchFrames();
             }
@@ -225,20 +231,22 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
 
         globalEventSource.addEventListener("message", (event) => {
             console.log("📩 SSE received :", event.data);
+            lastMessageRef.current = Date.now();
+            if (!connected) setConnected(true);
             handleMessage(event);
         });
 
         globalEventSource.addEventListener("error", (event) => {
             console.log("⚠️ SSE error, will retry…");
             globalEventSource?.close();
-            setEventSource(null);
+            setConnected(false);
             scheduleReconnect();
         });
 
         globalEventSource.addEventListener("close", (event) => {
             console.log("⚠️ SSE close, will retry…");
             globalEventSource?.close();
-            setEventSource(null);
+            setConnected(false);
             scheduleReconnect();
         });
 
@@ -246,6 +254,7 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
     };
 
     useEffect(() => {
+        framesRef.current = frames;
         if (hasRun.current) return;
         hasRun.current = true;
         // Fetch frames is done on SSE connection
@@ -261,9 +270,21 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
 
         connect();
 
+        // Check periodically if messages are still coming
+        timeoutRef.current = setInterval(() => {
+            const delta = Date.now() - lastMessageRef.current;
+            if (delta > 3000) {
+                setConnected(false);
+                scheduleReconnect();
+            }
+        }, 1000);
+
+
         const subscription = AppState.addEventListener("change", (state) => {
         if (state === "active") {
             inBackground.current = false;
+            // Reconnect now
+            clearReconnectTimer();
             connect();
         } else if (state === "background") {
             inBackground.current = true;
@@ -271,6 +292,7 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
         });
 
         return () => {
+            if (timeoutRef.current) clearInterval(timeoutRef.current);
             // Keep resources since app context can be reloaded on frame provider changes
             /*console.log("👋 Closing EventSource");
             globalEventSource.close();
@@ -279,7 +301,7 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
     }, [fetchFrames]);
 
   return (
-    <AppContext.Provider value={{ eventSource, time, sdMounted, discriOn, batteryPercentage }}>
+    <AppContext.Provider value={{ time, sdMounted, discriOn, batteryPercentage, connected }}>
       {children}
     </AppContext.Provider>
   );
