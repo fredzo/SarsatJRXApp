@@ -1,7 +1,60 @@
-import React, { useContext } from "react";
-import { Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { default as React, useContext, useRef } from "react";
+import { Animated, Easing, Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { FrameContext, FrameState } from '../providers/FrameProvider';
 
+const AnimatedButton = ({
+  icon,
+  label,
+  color,
+  onPress,
+}: {
+  icon: keyof typeof MaterialCommunityIcons.glyphMap;
+  label: string;
+  color: string;
+  onPress: () => void;
+}) => {
+  const scale = useRef(new Animated.Value(1)).current;
+
+  const animatePress = (toValue: number) => {
+    Animated.timing(scale, {
+      toValue,
+      duration: 120,
+      easing: Easing.out(Easing.quad),
+      useNativeDriver: true,
+    }).start();
+  };
+
+  return (
+    <Pressable
+      onPressIn={() => animatePress(0.9)}
+      onPressOut={() => animatePress(1)}
+      onPress={onPress}
+    >
+      <Animated.View
+        style={{
+          transform: [{ scale }],
+          backgroundColor: color,
+          borderRadius: 12,
+          paddingVertical: 8,
+          paddingHorizontal: 16,
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 8,
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.3,
+          shadowRadius: 3,
+          elevation: 3,
+        }}
+      >
+        <MaterialCommunityIcons name={icon} size={22} color="white" />
+        <Text style={{ color: "white", fontWeight: "600" }}>{label}</Text>
+      </Animated.View>
+    </Pressable>
+  );
+};
 
 export default function HomeScreen() {
   const { currentFrame } = useContext(FrameContext);
@@ -182,14 +235,29 @@ function calculateMaidenhead(lat: number | null, lon: number | null): string {
         </View>
       </ScrollView>
       {currentFrame.hasLocation && (
-        <View style={{marginTop:12}}>
-          <TouchableOpacity onPress={openMaps}>
-            <Text style={styles.link}>Open in Google Maps</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={openWaze}>
-            <Text style={styles.link}>Open in Waze</Text>
-          </TouchableOpacity>
+      <View style={{ marginTop: 10, marginBottom: 20 }}>
+        <View style={{ flexDirection: "row", justifyContent: "space-evenly", marginTop: 8 }}>
+          <AnimatedButton
+            icon="google-maps"
+            label="Maps"
+            color="#4285F4"
+            onPress={() => {
+              const url = `https://www.google.com/maps?q=${currentFrame.lat},${currentFrame.lon}`;
+              Linking.openURL(url);
+            }}
+          />
+
+          <AnimatedButton
+            icon="waze"
+            label="Waze"
+            color="#0DACE5"
+            onPress={() => {
+              const url = `https://waze.com/ul?ll=${currentFrame.lat},${currentFrame.lon}&navigate=yes`;
+              Linking.openURL(url);
+            }}
+          />
         </View>
+      </View>
       )}
     </View>
   );
@@ -200,7 +268,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#001000",
-    paddingTop: 40,
+    paddingTop: 10,
     paddingHorizontal: 12,
     borderWidth: 4,
     borderColor: "#003000",

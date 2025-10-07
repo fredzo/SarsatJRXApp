@@ -1,6 +1,5 @@
 import { AppContext } from '@/context/AppContext';
 import { cardSd } from '@lucide/lab';
-import { useRouter } from 'expo-router';
 import { Activity, Icon, MonitorUp, MonitorX } from 'lucide-react-native';
 import React, { useContext, useEffect, useRef } from 'react';
 import { Animated, StyleSheet, Text, View } from 'react-native';
@@ -38,7 +37,6 @@ export const BatteryIndicator: React.FC<BatteryProps> = ({ level }) => {
 };
 
 export default function Header() {
-  const router = useRouter();
   const { time, sdMounted, discriOn, batteryPercentage, connected } = useContext(AppContext);
   const blinkAnim = useRef(new Animated.Value(1)).current;
 
@@ -70,13 +68,13 @@ export default function Header() {
       <Text style={styles.time}>{time}</Text>
       <Icon iconNode={cardSd} style={{ marginLeft: 4, paddingLeft: 10, opacity: sdMounted ? 1 : 0.1 }} size={20} color="#FFFFFF"/>
       <Activity style={{ marginLeft: 4, paddingLeft: 10, opacity: discriOn ? 1 : 0.1 }} size={20} color="#FFFFFF"/>
+      {connected ? (
+      <MonitorUp color="#FFFFFF" size={20} />
+      ) : (
       <Animated.View style={{ opacity: blinkAnim, paddingLeft: 10 }}>
-        {connected ? (
-          <MonitorUp color="#FFFFFF" size={20} />
-        ) : (
           <MonitorX color="#ff8484ff" size={20} />
-        )}
       </Animated.View>
+      )}
       <Text style={styles.title}>SarsatJRXApp</Text>
       <View style={styles.headerBattery}>
         { (batteryPercentage != undefined) && (<BatteryIndicator level={batteryPercentage} />) }
@@ -85,9 +83,6 @@ export default function Header() {
           <View key={0} style={[styles.led, {backgroundColor: 'lime'}]} />
           <View key={1} style={[styles.led, {backgroundColor: 'grey'}]} />
       </View>
-    {/* <TouchableOpacity onPress={() => router.push('/settings')}>
-        <Settings color="white" size={20} />
-      </TouchableOpacity> */ }
     </View>
   );
 }

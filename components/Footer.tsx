@@ -1,4 +1,5 @@
-import { ArrowBigLeft, ArrowBigRight } from 'lucide-react-native';
+import { useRouter } from 'expo-router';
+import { ArrowBigLeft, ArrowBigRight, Settings } from 'lucide-react-native';
 import React, { useContext } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import CountdownSpinner from '../components/CountdownSpinner';
@@ -7,6 +8,7 @@ import { FrameContext } from '../providers/FrameProvider';
 
 export default function Footer() {
   const { frames, currentIndex, countdown, nextFrame, prevFrame } = useContext(FrameContext);
+  const router = useRouter();
   return (
     <View style={styles.footer}>
       <TouchableOpacity onPress={prevFrame}>
@@ -16,6 +18,9 @@ export default function Footer() {
       <Text style={styles.info}>
         Frame {frames.length > 0 ? currentIndex + 1 : 0} / {frames.length}
       </Text>
+      <TouchableOpacity onPress={() => router.push('/settings')}>
+        <Settings color="white" size={28} />
+      </TouchableOpacity>
       <TouchableOpacity onPress={nextFrame}>
         <ArrowBigRight size={28} color="cyan" />
       </TouchableOpacity>

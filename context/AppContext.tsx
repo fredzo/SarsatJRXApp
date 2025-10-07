@@ -6,9 +6,9 @@ import EventSource, { MessageEvent } from 'react-native-sse';
 
 //const DEVICE_URL = 'http://sarsatjrx.local';
 //const DEVICE_URL = 'http://localhost';
-const DEVICE_URL = 'http://192.168.0.83';
+//const DEVICE_URL = 'http://192.168.0.83';
 //const DEVICE_URL = 'http://10.0.2.2';
-//const DEVICE_URL = 'http://10.157.161.213';
+const DEVICE_URL = 'http://10.157.161.213';
 
 type AppContextType = {
   time: string | null;

@@ -22,7 +22,7 @@ export default function Layout() {
               <Tabs screenOptions={{
                 headerShown:false,
                 tabBarShowLabel: false, // hide text
-                tabBarStyle: { backgroundColor: "#000" }, // dark background
+                tabBarStyle: { backgroundColor: "#000", maxHeight: 50 }, // dark background
                 tabBarActiveTintColor: "cyan",
                 tabBarInactiveTintColor: "gray",
               }}>
