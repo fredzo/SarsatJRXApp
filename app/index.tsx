@@ -1,7 +1,8 @@
+import { AppContext } from "@/context/AppContext";
+import { FrameState } from "@/lib/frames";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { default as React, useContext, useRef } from "react";
 import { Animated, Easing, Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { FrameContext, FrameState } from '../providers/FrameProvider';
 
 const AnimatedButton = ({
   icon,
@@ -57,7 +58,7 @@ const AnimatedButton = ({
 };
 
 export default function HomeScreen() {
-  const { currentFrame } = useContext(FrameContext);
+  const { currentFrame } = useContext(AppContext);
 
   const openMaps = () => {
     if (!currentFrame?.hasLocation) return;

@@ -2,13 +2,13 @@ import { Platform, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { WebView } from "react-native-webview";
 
+import { AppContext } from "@/context/AppContext";
 import { useContext } from "react";
 import { Text, View } from 'react-native';
-import { FrameContext } from '../providers/FrameProvider';
 
 
 export default function DataScreen() {
-  const { frames, currentIndex } = useContext(FrameContext);
+  const { frames, currentIndex } = useContext(AppContext);
 
   if (!frames[currentIndex]) {
     return (

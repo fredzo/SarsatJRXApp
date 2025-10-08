@@ -1,11 +1,12 @@
+import { AppContext } from '@/context/AppContext';
+import { FrameState } from '@/lib/frames';
 import { MapView, Marker, Popup } from '@netizen-teknologi/react-native-maps-leaflet';
 import { useContext } from 'react';
 import { Platform, StyleSheet, Text, View } from 'react-native';
 import { WebView } from 'react-native-webview';
-import { FrameContext, FrameState } from '../providers/FrameProvider';
 
 export default function MapScreen() {
-  const { currentFrame } = useContext(FrameContext);
+  const { currentFrame } = useContext(AppContext);
 
   if (!currentFrame?.hasLocation) {
     return (

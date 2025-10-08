@@ -1,13 +1,13 @@
+import { AppContext } from '@/context/AppContext';
 import { useRouter } from 'expo-router';
 import { ArrowBigLeft, ArrowBigRight, Settings } from 'lucide-react-native';
 import React, { useContext } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import CountdownSpinner from '../components/CountdownSpinner';
-import { FrameContext } from '../providers/FrameProvider';
 
 
 export default function Footer() {
-  const { frames, currentIndex, countdown, nextFrame, prevFrame } = useContext(FrameContext);
+  const { frames, currentIndex, countdown, nextFrame, prevFrame } = useContext(AppContext);
   const router = useRouter();
   return (
     <View style={styles.footer}>

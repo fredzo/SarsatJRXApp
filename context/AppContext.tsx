@@ -1,11 +1,12 @@
-import { FrameContext } from "@/providers/FrameProvider";
+import { initAudio, playBeepHigh, playBeepLow, playSoundError, playSoundFiltered, playSoundKO, playSoundOK } from "@/lib/audio";
+import { addFrame, currentFrame, currentIndex, Frame, frames, nextFrame, prevFrame } from '@/lib/frames';
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { AudioModule, useAudioPlayer } from 'expo-audio';
-import React, { createContext, useContext, useEffect, useRef, useState } from "react";
+import React, { createContext, useEffect, useRef, useState } from "react";
 import { AppState } from "react-native";
 import EventSource, { MessageEvent } from 'react-native-sse';
 
 type AppContextType = {
+    // App
     time: string | null;
     sdMounted: boolean;
     discriOn: boolean;
@@ -13,9 +14,19 @@ type AppContextType = {
     connected: boolean;
     deviceURL: string | null,
     setDeviceURL: (url: string) => void;
+    // Frames
+    frames: Frame[];
+    currentFrame: Frame | null;
+    currentIndex: number;
+    countdown: number | null;
+    addFrame: (data: Record<string, string>) => void;
+    setCountdown: (countdown: number) => void;
+    nextFrame: () => void;
+    prevFrame: () => void;
 };
 
 export const AppContext = createContext<AppContextType>({
+    // App
     time: null,
     sdMounted: false,
     discriOn: false,
@@ -23,67 +34,20 @@ export const AppContext = createContext<AppContextType>({
     connected:false,
     deviceURL: null,
     setDeviceURL: () => {},
+    // Frames
+    frames: [],
+    currentFrame: null,
+    currentIndex: 0,
+    countdown: null,
+    addFrame: () => {},
+    setCountdown: () => {},
+    nextFrame: () => {},
+    prevFrame: () => {},
 });
 
 let globalEventSource:EventSource | null = null;
 
 let deviceURL: string | null = null;
-
-const soundOK = useAudioPlayer(require('../assets/ok.mp3'));
-const soundKO = useAudioPlayer(require('../assets/ko.mp3'));
-const soundError = useAudioPlayer(require('../assets/invalid.mp3'));
-const soundFiltered = useAudioPlayer(require('../assets/filtered.mp3'));
-const beepHigh = useAudioPlayer(require('../assets/counth.mp3'));
-const beepLow = useAudioPlayer(require('../assets/countl.mp3'));
-
-function playSoundOK() {
-    soundOK.seekTo(0);
-    soundOK.play();
-    setTimeout(() => {
-        soundOK.pause();
-    }, 250); // Pause sound at the end to stop ducking other audio sources
-
-}
-
-function playSoundKO() {
-    soundKO.seekTo(0);
-    soundKO.play();
-    setTimeout(() => {
-        soundKO.pause();
-    }, 250); // Pause sound at the end to stop ducking other audio sources
-}
-
-function playSoundError() {
-    soundError.seekTo(0);
-    soundError.play();
-    setTimeout(() => {
-        soundError.pause();
-    }, 350); // Pause sound at the end to stop ducking other audio sources
-}
-
-function playSoundFiltered() {
-    soundFiltered.seekTo(0);
-    soundFiltered.play();
-    setTimeout(() => {
-        soundFiltered.pause();
-    }, 350); // Pause sound at the end to stop ducking other audio sources
-}
-
-function playBeepHigh() {
-    beepHigh.seekTo(0);
-    beepHigh.play();
-    setTimeout(() => {
-        beepHigh.pause();
-    }, 300); // Pause sound at the end to stop ducking other audio sources
-}
-
-function playBeepLow() {
-    beepLow.seekTo(0);
-    beepLow.play();
-    setTimeout(() => {
-        beepLow.pause();
-    }, 300); // Pause sound at the end to stop ducking other audio sources
-}
 
 export const AppContextProvider = ({ children }: { children: React.ReactNode }) => {
     // Header info
@@ -92,7 +56,6 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
     const [discriOn, setDiscriOn] = useState<boolean>(false);
     const [batteryPercentage, setBatteryPercentage] = useState<number | null>(null);
     // Connection management
-    const { frames, addFrame, setCountdown } = useContext(FrameContext);
     const reconnectTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
     const retryDelay = useRef(1000); // 1s au départ
     const maxDelay = 5000; // 5s max
@@ -104,6 +67,12 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
     const [connected, setConnected] = useState(false);
     const lastMessageRef = useRef<number>(Date.now());
     const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    // Countdown
+    const [countdown, setCountdownValue] = useState<number | null>(null);
+
+    const setCountdown = (countdown: number) => {
+        setCountdownValue(i => (countdown));
+    };
 
     async function fetchFrames() {
         if(!deviceURL) return;
@@ -239,7 +208,6 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
 
     };
 
-
     const connect = () => {
         if(!deviceURL) return;
         clearGlobalEventSource();
@@ -309,13 +277,7 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
         }
         })();
 
-        AudioModule.setAudioModeAsync({
-            shouldPlayInBackground: true,
-            interruptionMode: 'duckOthers',
-            interruptionModeAndroid: 'duckOthers',
-            playsInSilentMode: true,
-            shouldRouteThroughEarpiece: false,
-        });
+        initAudio();
 
         // Check periodically if messages are still coming
         timeoutRef.current = setInterval(() => {
@@ -363,7 +325,7 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
     }, [deviceURL]);
 
   return (
-    <AppContext.Provider value={{ time, sdMounted, discriOn, batteryPercentage, connected, deviceURL, setDeviceURL }}>
+    <AppContext.Provider value={{ time, sdMounted, discriOn, batteryPercentage, connected, deviceURL, setDeviceURL, frames, currentFrame, currentIndex, countdown, addFrame, setCountdown, nextFrame, prevFrame }}>
       {children}
     </AppContext.Provider>
   );
