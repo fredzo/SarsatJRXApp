@@ -1,15 +1,10 @@
 import { FrameContext } from "@/providers/FrameProvider";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useFocusEffect } from "@react-navigation/native";
 import { AudioModule, useAudioPlayer } from 'expo-audio';
 import React, { createContext, useContext, useEffect, useRef, useState } from "react";
 import { AppState } from "react-native";
 import EventSource, { MessageEvent } from 'react-native-sse';
-
-//const DEVICE_URL = 'http://sarsatjrx.local';
-//const DEVICE_URL = 'http://localhost';
-//const DEVICE_URL = 'http://192.168.0.83';
-//const DEVICE_URL = 'http://10.0.2.2';
-const DEVICE_URL = 'http://10.157.161.213';
 
 type AppContextType = {
     time: string | null;
@@ -336,10 +331,12 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
         const subscription = AppState.addEventListener("change", (state) => {
         if (state === "active") {
             inBackground.current = false;
+            console.log("⚠️ App is active again !");
             // Reconnect now
             clearReconnectTimer();
             connect();
         } else if (state === "background") {
+            console.log("⚠️ App in background…");
             inBackground.current = true;
         }
         });
@@ -357,6 +354,17 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
     useEffect(() => {
         connect();
     }, [deviceURL]);
+
+    // Make sure we connections are alive upon gaining focus back for the application
+    useFocusEffect(
+    React.useCallback(() => {
+        console.log("⚠️ Use focus…");
+        // Reconnect now
+        clearReconnectTimer();
+        connect();
+    }, [])
+    );    
+
 
   return (
     <AppContext.Provider value={{ time, sdMounted, discriOn, batteryPercentage, connected, deviceURL, setDeviceURL }}>

@@ -47,9 +47,9 @@ export default function SettingsScreen() {
   };
 
   return (
-    <ScrollView style={styles.container}>
-      <Text style={{ color: "white", fontSize: 18, fontWeight: "bold", marginBottom: 10 }}>
-        Device URL
+    <View style={styles.container}>
+      <Text style={styles.h1}>
+        Decoder address
       </Text>
 
       {/* Combo editable */}
@@ -113,15 +113,15 @@ export default function SettingsScreen() {
           }}
         />
       )}
-      <View style={{ marginTop: 30 }}>
+      <ScrollView style={{ marginTop: 30 }}>
         <Text style={styles.h1}>Settings</Text>
         <Text style={styles.item}>WiFi SSID: MyDecoderSSID</Text>
         <Text style={styles.item}>WiFi Passkey: ********</Text>
         <Text style={styles.item}>Decoder Settings: Default</Text>
         <Text style={styles.item}>Display Settings: Dark Mode</Text>
         <Text style={styles.item}>System Info: v1.0.0</Text>
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 }
 

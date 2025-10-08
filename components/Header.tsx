@@ -66,13 +66,13 @@ export default function Header() {
   return (
     <View style={styles.header}>
       <Text style={styles.time}>{time}</Text>
-      <Icon iconNode={cardSd} style={{ marginLeft: 4, paddingLeft: 10, opacity: sdMounted ? 1 : 0.1 }} size={20} color="#FFFFFF"/>
-      <Activity style={{ marginLeft: 4, paddingLeft: 10, opacity: discriOn ? 1 : 0.1 }} size={20} color="#FFFFFF"/>
+      <Icon iconNode={cardSd} style={{ marginLeft: 4, opacity: sdMounted ? 1 : 0.1 }} size={20} color="#FFFFFF"/>
+      <Activity style={{ marginLeft: 4, opacity: discriOn ? 1 : 0.1 }} size={20} color="#FFFFFF"/>
       {connected ? (
-      <MonitorUp color="#FFFFFF" size={20} style={{paddingLeft: 10}}/>
+      <MonitorUp color="#FFFFFF" size={20} style={{marginLeft: 4}}/>
       ) : (
-      <Animated.View style={{ opacity: blinkAnim, paddingLeft: 10 }}>
-          <MonitorX color="#ff8484ff" size={20} />
+      <Animated.View style={{ opacity: blinkAnim }}>
+          <MonitorX color="#ff8484ff" size={20}  style={{marginLeft: 4}}/>
       </Animated.View>
       )}
       <Text style={styles.title}>SarsatJRXApp</Text>
