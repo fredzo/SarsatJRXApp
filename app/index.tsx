@@ -49,7 +49,7 @@ const AnimatedButton = ({
           elevation: 3,
         }}
       >
-        <MaterialCommunityIcons name={icon} size={22} color="white" />
+        <MaterialCommunityIcons name={icon} size={28} color="white" />
         <Text style={{ color: "white", fontWeight: "600" }}>{label}</Text>
       </Animated.View>
     </Pressable>

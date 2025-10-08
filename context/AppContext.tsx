@@ -1,4 +1,5 @@
 import { FrameContext } from "@/providers/FrameProvider";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { AudioModule, useAudioPlayer } from 'expo-audio';
 import React, { createContext, useContext, useEffect, useRef, useState } from "react";
 import { AppState } from "react-native";
@@ -11,19 +12,23 @@ import EventSource, { MessageEvent } from 'react-native-sse';
 const DEVICE_URL = 'http://10.157.161.213';
 
 type AppContextType = {
-  time: string | null;
-  sdMounted: boolean;
-  discriOn: boolean;
-  batteryPercentage: number | null;
-  connected: boolean;
+    time: string | null;
+    sdMounted: boolean;
+    discriOn: boolean;
+    batteryPercentage: number | null;
+    connected: boolean;
+    deviceURL: string | null,
+    setDeviceURL: (url: string) => void;
 };
 
 export const AppContext = createContext<AppContextType>({
-  time: null,
-  sdMounted: false,
-  discriOn: false,
-  batteryPercentage: null,
-  connected:false,
+    time: null,
+    sdMounted: false,
+    discriOn: false,
+    batteryPercentage: null,
+    connected:false,
+    deviceURL: null,
+    setDeviceURL: () => {},
 });
 
 let globalEventSource:EventSource | null = null;
@@ -47,6 +52,8 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
     const [connected, setConnected] = useState(false);
     const lastMessageRef = useRef<number>(Date.now());
     const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    // Device URL
+    const [deviceURL, setDeviceURLState] = useState<string|null>(null);    
 
     const soundOK = useAudioPlayer(require('../assets/ok.mp3'));
     const soundKO = useAudioPlayer(require('../assets/ko.mp3'));
@@ -105,8 +112,9 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
     }
 
     async function fetchFrames() {
+        if(!deviceURL) return;
         try {
-            const resp = await fetch(DEVICE_URL+'/frames');
+            const resp = await fetch(deviceURL+'/frames');
             const text = await resp.text();
             text.split("\n#\n").forEach(line => 
             {
@@ -116,8 +124,9 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
     }
 
     async function fetchFrame() {
+        if(!deviceURL) return;
         try {
-            const resp = await fetch(DEVICE_URL+'/frame');
+            const resp = await fetch(deviceURL+'/frame');
             const text = await resp.text();
             parseFrame(text);
         } catch {}
@@ -238,9 +247,11 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
 
 
     const connect = () => {
+        if(!deviceURL) return;
         clearGlobalEventSource();
-        console.log("🔌 EventSource connection...");
-        globalEventSource = new EventSource(DEVICE_URL+"/sse");
+        const url = deviceURL + "/sse";
+        console.log("🔌 Connecting SSE to", url);
+        globalEventSource = new EventSource(url);
 
         globalEventSource.addEventListener("open", () => {
             console.log("✅ EventSource connected");
@@ -275,12 +286,34 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
         return globalEventSource;
     };
 
+    // 💾 Persist new device URL whenever it changes
+    const setDeviceURL = async (url: string) => {
+        setDeviceURLState(url);
+        await AsyncStorage.setItem("lastDeviceURL", url);
+    };    
+
     useEffect(() => {
         framesRef.current = frames;
+        // Only run init stuff once
         if (hasRun.current) return;
         hasRun.current = true;
-        // Fetch frames is done on SSE connection
-        //fetchFrames();
+
+        // Load previously saved device URL
+        (async () => {
+        try {
+            const saved = await AsyncStorage.getItem("lastDeviceURL");
+            if(saved)
+            {   // Reload previous value
+                setDeviceURLState(saved);
+            }
+            else
+            {   // Init to default
+                setDeviceURL("http://sarsatjrx.local");
+            }
+        } catch (e) {
+            console.warn("Error loading device URL", e);
+        }
+        })();
 
         AudioModule.setAudioModeAsync({
             shouldPlayInBackground: true,
@@ -289,8 +322,6 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
             playsInSilentMode: true,
             shouldRouteThroughEarpiece: false,
         });
-
-        connect();
 
         // Check periodically if messages are still coming
         timeoutRef.current = setInterval(() => {
@@ -320,10 +351,15 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
             if (reconnectTimeout.current) clearTimeout(reconnectTimeout.current);
             if (timeoutRef.current) clearInterval(timeoutRef.current);*/
         };
-    }, [fetchFrames]);
+    }, []);
+
+    // Reconnect on deviceURL change
+    useEffect(() => {
+        connect();
+    }, [deviceURL]);
 
   return (
-    <AppContext.Provider value={{ time, sdMounted, discriOn, batteryPercentage, connected }}>
+    <AppContext.Provider value={{ time, sdMounted, discriOn, batteryPercentage, connected, deviceURL, setDeviceURL }}>
       {children}
     </AppContext.Provider>
   );
