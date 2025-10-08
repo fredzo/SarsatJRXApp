@@ -1,6 +1,5 @@
 import { FrameContext } from "@/providers/FrameProvider";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useFocusEffect } from "@react-navigation/native";
 import { AudioModule, useAudioPlayer } from 'expo-audio';
 import React, { createContext, useContext, useEffect, useRef, useState } from "react";
 import { AppState } from "react-native";
@@ -28,6 +27,64 @@ export const AppContext = createContext<AppContextType>({
 
 let globalEventSource:EventSource | null = null;
 
+let deviceURL: string | null = null;
+
+const soundOK = useAudioPlayer(require('../assets/ok.mp3'));
+const soundKO = useAudioPlayer(require('../assets/ko.mp3'));
+const soundError = useAudioPlayer(require('../assets/invalid.mp3'));
+const soundFiltered = useAudioPlayer(require('../assets/filtered.mp3'));
+const beepHigh = useAudioPlayer(require('../assets/counth.mp3'));
+const beepLow = useAudioPlayer(require('../assets/countl.mp3'));
+
+function playSoundOK() {
+    soundOK.seekTo(0);
+    soundOK.play();
+    setTimeout(() => {
+        soundOK.pause();
+    }, 250); // Pause sound at the end to stop ducking other audio sources
+
+}
+
+function playSoundKO() {
+    soundKO.seekTo(0);
+    soundKO.play();
+    setTimeout(() => {
+        soundKO.pause();
+    }, 250); // Pause sound at the end to stop ducking other audio sources
+}
+
+function playSoundError() {
+    soundError.seekTo(0);
+    soundError.play();
+    setTimeout(() => {
+        soundError.pause();
+    }, 350); // Pause sound at the end to stop ducking other audio sources
+}
+
+function playSoundFiltered() {
+    soundFiltered.seekTo(0);
+    soundFiltered.play();
+    setTimeout(() => {
+        soundFiltered.pause();
+    }, 350); // Pause sound at the end to stop ducking other audio sources
+}
+
+function playBeepHigh() {
+    beepHigh.seekTo(0);
+    beepHigh.play();
+    setTimeout(() => {
+        beepHigh.pause();
+    }, 300); // Pause sound at the end to stop ducking other audio sources
+}
+
+function playBeepLow() {
+    beepLow.seekTo(0);
+    beepLow.play();
+    setTimeout(() => {
+        beepLow.pause();
+    }, 300); // Pause sound at the end to stop ducking other audio sources
+}
+
 export const AppContextProvider = ({ children }: { children: React.ReactNode }) => {
     // Header info
     const [time, setTime] = useState<string | null>(null);
@@ -47,64 +104,6 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
     const [connected, setConnected] = useState(false);
     const lastMessageRef = useRef<number>(Date.now());
     const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-    // Device URL
-    const [deviceURL, setDeviceURLState] = useState<string|null>(null);    
-
-    const soundOK = useAudioPlayer(require('../assets/ok.mp3'));
-    const soundKO = useAudioPlayer(require('../assets/ko.mp3'));
-    const soundError = useAudioPlayer(require('../assets/invalid.mp3'));
-    const soundFiltered = useAudioPlayer(require('../assets/filtered.mp3'));
-    const beepHigh = useAudioPlayer(require('../assets/counth.mp3'));
-    const beepLow = useAudioPlayer(require('../assets/countl.mp3'));
-
-    function playSoundOK() {
-        soundOK.seekTo(0);
-        soundOK.play();
-        setTimeout(() => {
-            soundOK.pause();
-        }, 250); // Pause sound at the end to stop ducking other audio sources
-
-    }
-
-    function playSoundKO() {
-        soundKO.seekTo(0);
-        soundKO.play();
-        setTimeout(() => {
-            soundKO.pause();
-        }, 250); // Pause sound at the end to stop ducking other audio sources
-    }
-
-    function playSoundError() {
-        soundError.seekTo(0);
-        soundError.play();
-        setTimeout(() => {
-            soundError.pause();
-        }, 350); // Pause sound at the end to stop ducking other audio sources
-    }
-
-    function playSoundFiltered() {
-        soundFiltered.seekTo(0);
-        soundFiltered.play();
-        setTimeout(() => {
-            soundFiltered.pause();
-        }, 350); // Pause sound at the end to stop ducking other audio sources
-    }
-
-    function playBeepHigh() {
-        beepHigh.seekTo(0);
-        beepHigh.play();
-        setTimeout(() => {
-            beepHigh.pause();
-        }, 300); // Pause sound at the end to stop ducking other audio sources
-    }
-
-    function playBeepLow() {
-        beepLow.seekTo(0);
-        beepLow.play();
-        setTimeout(() => {
-            beepLow.pause();
-        }, 300); // Pause sound at the end to stop ducking other audio sources
-    }
 
     async function fetchFrames() {
         if(!deviceURL) return;
@@ -218,7 +217,7 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
     };
 
     const scheduleReconnect = () => {
-            if (reconnectTimeout.current) return; // Reconnection already pending
+            if (reconnectTimeout.current) return;
             console.log(`🔁 Reconnection attempt in ${retryDelay.current / 1000}s...`);
             reconnectTimeout.current = setTimeout(() => {
             connect();
@@ -283,7 +282,7 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
 
     // 💾 Persist new device URL whenever it changes
     const setDeviceURL = async (url: string) => {
-        setDeviceURLState(url);
+        deviceURL = url;
         await AsyncStorage.setItem("lastDeviceURL", url);
     };    
 
@@ -299,7 +298,7 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
             const saved = await AsyncStorage.getItem("lastDeviceURL");
             if(saved)
             {   // Reload previous value
-                setDeviceURLState(saved);
+                deviceURL = saved;
             }
             else
             {   // Init to default
@@ -322,8 +321,13 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
         timeoutRef.current = setInterval(() => {
             const delta = Date.now() - lastMessageRef.current;
             if (delta > 3000) {
+                console.log("⚠️ Connection lost, reconnecting…");
                 setConnected(false);
-                scheduleReconnect();
+                // Clear delay
+                lastMessageRef.current = Date.now();
+                // Reconnect now
+                clearReconnectTimer();
+                connect();
             }
         }, 1000);
 
@@ -332,9 +336,11 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
         if (state === "active") {
             inBackground.current = false;
             console.log("⚠️ App is active again !");
-            // Reconnect now
-            clearReconnectTimer();
-            connect();
+            if(!connected)
+            {   // Reconnect now
+                clearReconnectTimer();
+                connect();
+            }
         } else if (state === "background") {
             console.log("⚠️ App in background…");
             inBackground.current = true;
@@ -352,19 +358,9 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
 
     // Reconnect on deviceURL change
     useEffect(() => {
-        connect();
-    }, [deviceURL]);
-
-    // Make sure we connections are alive upon gaining focus back for the application
-    useFocusEffect(
-    React.useCallback(() => {
-        console.log("⚠️ Use focus…");
-        // Reconnect now
         clearReconnectTimer();
         connect();
-    }, [])
-    );    
-
+    }, [deviceURL]);
 
   return (
     <AppContext.Provider value={{ time, sdMounted, discriOn, batteryPercentage, connected, deviceURL, setDeviceURL }}>
