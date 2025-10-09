@@ -27,6 +27,10 @@ export function setCurrentFrame(frame:Frame| null) {
   currentFrame = frame;
 }
 
+export function getFrameCount() {
+  return frames.length;
+}
+
 export const addFrame = (data: Record<string, string>) => {
   let frameLat = 0;
   let frameLon = 0;

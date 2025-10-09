@@ -1,5 +1,5 @@
 import { initAudio, playBeepHigh, playBeepLow, playSoundError, playSoundFiltered, playSoundKO, playSoundOK } from "@/lib/audio";
-import { addFrame, currentFrame, currentIndex, Frame, frames, nextFrame, prevFrame } from '@/lib/frames';
+import { addFrame, currentFrame, currentIndex, Frame, frames, getFrameCount, nextFrame, prevFrame } from '@/lib/frames';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { createContext, useEffect, useRef, useState } from "react";
 import { AppState } from "react-native";
@@ -61,8 +61,6 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
     const maxDelay = 5000; // 5s max
     const hasRun = useRef(false);
     const inBackground = useRef(false); // True when app is in background
-    // Keep track on the latest frames status
-    const framesRef = useRef(frames);
     // Connection status
     const [connected, setConnected] = useState(false);
     const lastMessageRef = useRef<number>(Date.now());
@@ -218,7 +216,7 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
         globalEventSource.addEventListener("open", () => {
             console.log("✅ EventSource connected");
             retryDelay.current = 1000; // reset reconnection delay
-            if(framesRef.current.length == 0) // Make sure we have latest frames length value
+            if(getFrameCount() == 0)
             {   // No frames yet, check for frames on the decoder
                 fetchFrames();
             }
@@ -255,7 +253,6 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
     };    
 
     useEffect(() => {
-        framesRef.current = frames;
         // Only run init stuff once
         if (hasRun.current) return;
         hasRun.current = true;
