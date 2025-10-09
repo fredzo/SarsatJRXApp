@@ -64,12 +64,12 @@ export default function SettingsScreen() {
       >
         <TextInput
           style={{ flex: 1, color: "white", fontSize: 16 }}
-          value={deviceURL ? deviceURL : ""}
+          defaultValue={deviceURL ? deviceURL : ""}
           placeholder="Enter or select URL"
           placeholderTextColor="#777"
           onFocus={() => setShowList(true)}
-          onSubmitEditing={() => {
-            if (deviceURL) saveDeviceURL(deviceURL);
+          onSubmitEditing={(e : any) => {
+            saveDeviceURL(e.nativeEvent.text);
             setShowList(false);
           }}
         />

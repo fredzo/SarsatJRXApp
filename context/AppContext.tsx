@@ -187,11 +187,11 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
     };
 
     const scheduleReconnect = () => {
-            if (reconnectTimeout.current) return;
+            if (reconnectTimeout.current || connecting) return;
             console.log(`🔁 Reconnection attempt in ${retryDelay.current / 1000}s...`);
             reconnectTimeout.current = setTimeout(() => {
-            connect();
-            reconnectTimeout.current = null;
+                connect();
+                reconnectTimeout.current = null;
         }, retryDelay.current);
 
         // Exponential reconnection delay

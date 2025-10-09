@@ -24,7 +24,10 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.fredzo.SarsatJRXApp"
+      "package": "com.fredzo.SarsatJRXApp",
+      "permissions": [
+        "FOREGROUND_SERVICE"
+      ]
     },
     "web": {
       "output": "single",
