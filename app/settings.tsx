@@ -41,7 +41,6 @@ export default function SettingsScreen() {
 
   // 🧭 Handle selection from combo
   const handleSelect = (url: string) => {
-    setDeviceURL(url);
     saveDeviceURL(url);
     setShowList(false);
   };
@@ -68,10 +67,9 @@ export default function SettingsScreen() {
           value={deviceURL ? deviceURL : ""}
           placeholder="Enter or select URL"
           placeholderTextColor="#777"
-          onChangeText={(text) => setDeviceURL(text)}
           onFocus={() => setShowList(true)}
           onSubmitEditing={() => {
-            if (deviceURL) saveDeviceURL(deviceURL.trim().replace(/\/$/, ""));
+            if (deviceURL) saveDeviceURL(deviceURL);
             setShowList(false);
           }}
         />

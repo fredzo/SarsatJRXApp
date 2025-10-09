@@ -47,7 +47,9 @@ export const AppContext = createContext<AppContextType>({
 
 let globalEventSource:EventSource | null = null;
 
-let deviceURL: string | null = null;
+let storedDeviceURL: string | null = null;
+
+let connecting:boolean = false;
 
 export const AppContextProvider = ({ children }: { children: React.ReactNode }) => {
     // Header info
@@ -56,6 +58,7 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
     const [discriOn, setDiscriOn] = useState<boolean>(false);
     const [batteryPercentage, setBatteryPercentage] = useState<number | null>(null);
     // Connection management
+    const [deviceURL, setDeviceUrlValue] =  useState<string | null>(storedDeviceURL);
     const reconnectTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
     const retryDelay = useRef(1000); // 1s au départ
     const maxDelay = 5000; // 5s max
@@ -75,9 +78,9 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
     };
 
     async function fetchFrames() {
-        if(!deviceURL) return;
+        if(!storedDeviceURL) return;
         try {
-            const resp = await fetch(deviceURL+'/frames');
+            const resp = await fetch(storedDeviceURL+'/frames');
             const text = await resp.text();
             text.split("\n#\n").forEach(line => 
             {
@@ -88,9 +91,9 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
     }
 
     async function fetchFrame() {
-        if(!deviceURL) return;
+        if(!storedDeviceURL) return;
         try {
-            const resp = await fetch(deviceURL+'/frame');
+            const resp = await fetch(storedDeviceURL+'/frame');
             const text = await resp.text();
             parseFrame(text);
             updateCurrentFrame(selectedFrame);
@@ -178,8 +181,8 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
 
     const clearReconnectTimer = () => {
         if (reconnectTimeout.current) {
-        clearTimeout(reconnectTimeout.current);
-        reconnectTimeout.current = null;
+            clearTimeout(reconnectTimeout.current);
+            reconnectTimeout.current = null;
         }
     };
 
@@ -207,9 +210,12 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
     };
 
     const connect = () => {
-        if(!deviceURL) return;
+        if(!storedDeviceURL) console.log("⚠️ Device URL is null on connet !");
+        if(connecting) console.log("⚠️ Connetion attempt while connecting !");
+        if(!storedDeviceURL || connecting) return;
+        connecting = true;
         clearGlobalEventSource();
-        const url = deviceURL + "/sse";
+        const url = storedDeviceURL + "/sse";
         console.log("🔌 Connecting SSE to", url);
         globalEventSource = new EventSource(url);
 
@@ -221,6 +227,9 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
                 fetchFrames();
                 updateCurrentFrame(selectedFrame);
             }
+            // Reset watchdog timer
+            lastMessageRef.current = Date.now();
+            connecting = false;
         });
 
         globalEventSource.addEventListener("message", (event) => {
@@ -249,7 +258,16 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
 
     // 💾 Persist new device URL whenever it changes
     const setDeviceURL = async (url: string) => {
-        deviceURL = url;
+        console.log("⚠️ Settting device URL to ",url);
+        setDeviceUrlValue(url);
+        storedDeviceURL = url;
+        // Reconnect on deviceURL change
+        // Clear reconnection delay
+        lastMessageRef.current = Date.now();
+        // Force reconnecting
+        connecting = false;
+        clearReconnectTimer();
+        connect();
         await AsyncStorage.setItem("lastDeviceURL", url);
     };    
 
@@ -264,7 +282,11 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
             const saved = await AsyncStorage.getItem("lastDeviceURL");
             if(saved)
             {   // Reload previous value
-                deviceURL = saved;
+                console.log("⚠️ Restored device URL :", saved);
+                storedDeviceURL = saved;
+                setDeviceUrlValue(saved);
+                // Wait for deviceUrl before connection
+                connect();
             }
             else
             {   // Init to default
@@ -280,7 +302,7 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
         // Check periodically if messages are still coming
         timeoutRef.current = setInterval(() => {
             const delta = Date.now() - lastMessageRef.current;
-            if (delta > 3000) {
+            if (delta > 3000 && !connecting) {
                 console.log("⚠️ Connection lost, reconnecting…");
                 setConnected(false);
                 // Clear delay
@@ -315,12 +337,6 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
             if (timeoutRef.current) clearInterval(timeoutRef.current);*/
         };
     }, []);
-
-    // Reconnect on deviceURL change
-    useEffect(() => {
-        clearReconnectTimer();
-        connect();
-    }, [deviceURL]);
 
   return (
     <AppContext.Provider value={{ time, sdMounted, discriOn, batteryPercentage, connected, deviceURL, setDeviceURL, frames, currentFrame, currentIndex, countdown, addFrame, setCountdown, nextFrame, prevFrame }}>
