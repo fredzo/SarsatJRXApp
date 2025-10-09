@@ -1,5 +1,5 @@
 import { initAudio, playBeepHigh, playBeepLow, playSoundError, playSoundFiltered, playSoundKO, playSoundOK } from "@/lib/audio";
-import { addFrame, currentFrame, currentIndex, Frame, frames, getFrameCount, nextFrame, prevFrame } from '@/lib/frames';
+import { addFrame, currentIndex, Frame, frames, getFrameCount, parseFrame, selectedFrame, setCurrentFrame, setCurrentIndex } from '@/lib/frames';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { createContext, useEffect, useRef, useState } from "react";
 import { AppState } from "react-native";
@@ -67,6 +67,8 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
     const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     // Countdown
     const [countdown, setCountdownValue] = useState<number | null>(null);
+    // Current frame
+    const [currentFrame, updateCurrentFrame] = useState(selectedFrame);
 
     const setCountdown = (countdown: number) => {
         setCountdownValue(i => (countdown));
@@ -80,6 +82,7 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
             text.split("\n#\n").forEach(line => 
             {
                 parseFrame(line);
+                updateCurrentFrame(selectedFrame);
             });
         } catch {}
     }
@@ -90,26 +93,22 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
             const resp = await fetch(deviceURL+'/frame');
             const text = await resp.text();
             parseFrame(text);
+            updateCurrentFrame(selectedFrame);
         } catch {}
     }
 
-    function parseFrame(frameData: string) {
-        try {
-            const parsed: Record<string, string> = {};
-            frameData.split(/\r?\n/).forEach(line => {
-                const idx = line.indexOf('=');
-                const key = line.slice(0, idx);
-                const value = line.slice(idx + 1);
-                //console.log("Frame data:",key,value);
-                if (key && value) parsed[key.trim()] = value.trim();
-            });
-            if(Object.entries(parsed).length > 0)
-            {
-                addFrame(parsed);
-            }
-        } catch {}
-    }
-    
+    const nextFrame = () => {
+        setCurrentIndex(((currentIndex + 1) % frames.length));
+        setCurrentFrame(frames[currentIndex]);
+        updateCurrentFrame(selectedFrame);
+    };
+
+    const prevFrame = () => {
+        setCurrentIndex((((currentIndex - 1) >= 0) ? (currentIndex - 1) : (frames.length-1)));
+        setCurrentFrame(frames[currentIndex]);
+        updateCurrentFrame(selectedFrame);
+    };
+
     const handleMessage = (e: MessageEvent) => {
         if (!e.data) return;
         if (e.data.startsWith('tick;')) 
@@ -145,6 +144,7 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
                 if(valid && !filtered)
                 {
                     parseFrame(e.data.split("\n").slice(1).join("\n"));
+                    updateCurrentFrame(selectedFrame);
                     if(error)
                     {
                         playSoundKO();
@@ -219,6 +219,7 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
             if(getFrameCount() == 0)
             {   // No frames yet, check for frames on the decoder
                 fetchFrames();
+                updateCurrentFrame(selectedFrame);
             }
         });
 

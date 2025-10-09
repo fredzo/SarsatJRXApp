@@ -16,19 +16,38 @@ export type Frame = {
 };
 
 export let frames:Frame[] = [];
-export let currentFrame: Frame | null;
+export let selectedFrame: Frame | null;
 export let currentIndex: number;
 
 export function setCurrentIndex(index:number) {
+  //console.log("Set current index = ",index);
   currentIndex = index;
 }
 
 export function setCurrentFrame(frame:Frame| null) {
-  currentFrame = frame;
+  //console.log("Set current frame ", frame?.data.title);
+  selectedFrame = frame;
 }
 
 export function getFrameCount() {
   return frames.length;
+}
+
+export function parseFrame(frameData: string) {
+    try {
+        const parsed: Record<string, string> = {};
+        frameData.split(/\r?\n/).forEach(line => {
+            const idx = line.indexOf('=');
+            const key = line.slice(0, idx);
+            const value = line.slice(idx + 1);
+            //console.log("Frame data:",key,value);
+            if (key && value) parsed[key.trim()] = value.trim();
+        });
+        if(Object.entries(parsed).length > 0)
+        {
+            addFrame(parsed);
+        }
+    } catch {}
 }
 
 export const addFrame = (data: Record<string, string>) => {
@@ -51,14 +70,4 @@ export const addFrame = (data: Record<string, string>) => {
   frames = [...frames, newFrame];
   setCurrentFrame(newFrame);
   setCurrentIndex(frames.length - 1); // move to latest frame
-};
-
-export const nextFrame = () => {
-    setCurrentIndex(((currentIndex + 1) % frames.length));
-    setCurrentFrame(frames[currentIndex]);
-};
-
-export const prevFrame = () => {
-    setCurrentIndex((((currentIndex - 1) >= 0) ? (currentIndex - 1) : (frames.length-1)));
-    setCurrentFrame(frames[currentIndex]);
 };

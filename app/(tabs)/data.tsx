@@ -8,9 +8,9 @@ import { Text, View } from 'react-native';
 
 
 export default function DataScreen() {
-  const { frames, currentIndex } = useContext(AppContext);
+  const { currentFrame } = useContext(AppContext);
 
-  if (!frames[currentIndex]) {
+  if (!currentFrame) {
     return (
       <View style={styles.container}>
         <Text style={styles.h1}>Map</Text>
@@ -25,9 +25,9 @@ export default function DataScreen() {
   return (
     <SafeAreaView style={styles.container} edges={["top", "bottom", "left", "right"]}>
       {Platform.OS === "web" ? (
-        <iframe src={externalUrl + frames[currentIndex].data['data']} style={styles.webIframe as any} />
+        <iframe src={externalUrl + currentFrame.data['data']} style={styles.webIframe as any} />
       ) : (
-        <WebView source={{ uri: externalUrl + frames[currentIndex].data['data'] }} style={styles.webview} />
+        <WebView source={{ uri: externalUrl + currentFrame.data['data'] }} style={styles.webview} />
       )}
     </SafeAreaView>
   );

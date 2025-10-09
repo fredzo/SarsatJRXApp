@@ -70,11 +70,11 @@ async def get_frame():
 async def get_all_frames():
     """Return all frames separated by '#\\n'."""
     if not frames:
-        return "No frame yet"
-    return "#\n".join(
+        return ""
+    return "\n#\n".join(
         "\n".join(f"{k}={v}" for k, v in frame.items())
-        for frame in frames
-    )
+        for frame in frames)
+
 
 
 @app.get("/sse")

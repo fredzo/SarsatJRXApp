@@ -1,7 +1,6 @@
 import { AppContextProvider } from '@/context/AppContext';
 import { useKeepAwake } from "expo-keep-awake";
-import { Tabs } from 'expo-router';
-import { ExternalLink, MapPin, RadioTower, Settings } from 'lucide-react-native';
+import { Stack } from 'expo-router';
 import React from 'react';
 import { View } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
@@ -17,18 +16,23 @@ export default function Layout() {
             <SafeAreaView edges={['top']}>
               <Header />
             </SafeAreaView>
-            <Tabs screenOptions={{
-              headerShown:false,
-              tabBarShowLabel: false, // hide text
-              tabBarStyle: { backgroundColor: "#000", maxHeight: 50 }, // dark background
-              tabBarActiveTintColor: "cyan",
-              tabBarInactiveTintColor: "gray",
-            }}>
-              <Tabs.Screen name="index" options={{ title: '', tabBarIcon: ({ color, size }) => <RadioTower color={color} size={size} /> }} />
-              <Tabs.Screen name="map" options={{ title: '', tabBarIcon: ({ color, size }) => <MapPin color={color} size={size} /> }} />
-              <Tabs.Screen name="data" options={{ title: '', tabBarIcon: ({ color, size }) => <ExternalLink color={color} size={size} /> }} />
-              <Tabs.Screen name="settings" options={{ title: '', tabBarIcon: ({ color, size }) => <Settings color={color} size={size} /> }} />
-            </Tabs>
+            <Stack screenOptions={{
+                headerStyle: {
+                  backgroundColor:'#001a1a',
+                },
+                headerTintColor: '#3fe6e6',
+                headerTitleStyle: {
+                  fontWeight: "bold",
+                  color:'#3fe6e6', 
+                  fontSize:22
+                },
+              }}>
+              {/* Main route to tabs */}
+              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+
+              {/* Settings screen */}
+              <Stack.Screen name="settings" options={{ /*presentation: "modal",*/ title: "Settings ⚙️", headerShown: true }} />
+            </Stack>            
             <SafeAreaView edges={['bottom']}>
               <Footer />
             </SafeAreaView>
