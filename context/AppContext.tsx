@@ -137,13 +137,13 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
         } 
         else if (e.data.startsWith('frame'))
         {
-            const parts = e.data.split(';');
+            const parts = e.data.split("\n")[0].split(';');
             if(parts.length==4)
             {
                 const valid = parts[1] === "1";
                 const filtered = parts[2] === "1";
                 const error = parts[3] === "1";
-                //console.log("Event data: ",e.data);
+                //console.log("Event parts: ",parts);
                 if(valid && !filtered)
                 {
                     parseFrame(e.data.split("\n").slice(1).join("\n"));
@@ -234,13 +234,16 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
 
         globalEventSource.addEventListener("message", (event) => {
             console.log("📩 SSE received :", event.data);
+            connecting = false;
             lastMessageRef.current = Date.now();
             if (!connected) setConnected(true);
             handleMessage(event);
+            connecting = false;
         });
 
         globalEventSource.addEventListener("error", (event) => {
             console.log("⚠️ SSE error, will retry…");
+            connecting = false;
             globalEventSource?.close();
             setConnected(false);
             scheduleReconnect();
@@ -248,6 +251,7 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
 
         globalEventSource.addEventListener("close", (event) => {
             console.log("⚠️ SSE close, will retry…");
+            connecting = false;
             globalEventSource?.close();
             setConnected(false);
             scheduleReconnect();
@@ -302,8 +306,9 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
         // Check periodically if messages are still coming
         timeoutRef.current = setInterval(() => {
             const delta = Date.now() - lastMessageRef.current;
-            if (delta > 3000 && !connecting) {
+            if ((!connecting && delta > 3000) || (connecting && delta > 5000)) {
                 console.log("⚠️ Connection lost, reconnecting…");
+                connecting = false;
                 setConnected(false);
                 // Clear delay
                 lastMessageRef.current = Date.now();
