@@ -1,6 +1,8 @@
 import { AppContext } from "@/context/AppContext";
+import { playSoundError, playSoundFiltered, playSoundKO, playSoundOK } from "@/lib/audio";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Speaker } from "lucide-react-native";
 import { default as React, useContext, useEffect, useState } from 'react';
 import { FlatList, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
@@ -118,6 +120,18 @@ export default function SettingsScreen() {
         <Text style={styles.item}>Decoder Settings: Default</Text>
         <Text style={styles.item}>Display Settings: Dark Mode</Text>
         <Text style={styles.item}>System Info: v1.0.0</Text>
+        <TouchableOpacity onPress={playSoundOK}>
+          <Speaker size={28} color="cyan" /><Text>OK</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={playSoundKO}>
+          <Speaker size={28} color="cyan" /><Text>KO</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={playSoundError}>
+          <Speaker size={28} color="cyan" /><Text>Error</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={playSoundFiltered}>
+          <Speaker size={28} color="cyan" /><Text>Filtered</Text>
+        </TouchableOpacity>
       </ScrollView>
     </View>
   );

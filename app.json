@@ -61,6 +61,19 @@
             "backgroundColor": "#000000"
           }
         }
+      ],
+      [
+      "expo-asset",
+      {
+        "assets": [ "./assets/audios/counth.mp3",
+                    "./assets/audios/countl.mp3",
+                    "./assets/audios/filtered.mp3",
+                    "./assets/audios/invalid.mp3",
+                    "./assets/audios/ko.mp3",
+                    "./assets/audios/ok.mp3",
+                    "./assets/audios/touch.mp3"
+                  ]
+      }
       ]
     ],
     "experiments": {

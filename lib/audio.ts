@@ -1,18 +1,40 @@
+import { Asset } from "expo-asset";
 import { AudioModule, useAudioPlayer } from 'expo-audio';
+import { Platform } from 'react-native';
 
-const soundOK = useAudioPlayer(require('../assets/ok.mp3'));
-const soundKO = useAudioPlayer(require('../assets/ko.mp3'));
-const soundError = useAudioPlayer(require('../assets/invalid.mp3'));
-const soundFiltered = useAudioPlayer(require('../assets/filtered.mp3'));
-const beepHigh = useAudioPlayer(require('../assets/counth.mp3'));
-const beepLow = useAudioPlayer(require('../assets/countl.mp3'));
+export function useAudioAsset(assetId: number) {
+  const platform = Platform.OS;
+  const getAudioSource = () => {
+    console.log("getAudioSource for ",assetId);
+    if (!__DEV__ && platform === "android") {
+      const assetinfo = Asset.fromModule(assetId);
+      console.log("Android no dev => URI = ",assetinfo.localUri);
+      const rawPath = assetinfo.localUri?.replace("file://", "");
+      console.log("Raw path = ",rawPath);
+      if (!rawPath) return;
+      return { uri: rawPath };
+    }
+    return assetId;
+  };
+
+  const player = useAudioPlayer(getAudioSource());
+
+  return player;
+}
+
+const soundOK = useAudioAsset(require('@/assets/audios/ok.mp3'));
+const soundKO = useAudioAsset(require('@/assets/audios/ko.mp3'));
+const soundError = useAudioAsset(require('@/assets/audios/invalid.mp3'));
+const soundFiltered = useAudioAsset(require('@/assets/audios/filtered.mp3'));
+const beepHigh = useAudioAsset(require('@/assets/audios/counth.mp3'));
+const beepLow = useAudioAsset(require('@/assets/audios/countl.mp3'));
 
 export function playSoundOK() {
     soundOK.seekTo(0);
     soundOK.play();
     setTimeout(() => {
         soundOK.pause();
-    }, 250); // Pause sound at the end to stop ducking other audio sources
+    }, 350); // Pause sound at the end to stop ducking other audio sources
 
 }
 
@@ -21,7 +43,7 @@ export function playSoundKO() {
     soundKO.play();
     setTimeout(() => {
         soundKO.pause();
-    }, 250); // Pause sound at the end to stop ducking other audio sources
+    }, 350); // Pause sound at the end to stop ducking other audio sources
 }
 
 export function playSoundError() {
