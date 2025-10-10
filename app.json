@@ -12,7 +12,12 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.fredzo.SarsatJRXApp",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSLocationWhenInUseUsageDescription": "This app uses your location to show beacon positions on the map.",
+        "NSAppTransportSecurity": {
+          "NSAllowsArbitraryLoads": true
+        },
+        "UIBackgroundModes": ["audio", "fetch", "processing"]
       }
     },
     "android": {
@@ -26,14 +31,24 @@
       "predictiveBackGestureEnabled": false,
       "package": "com.fredzo.SarsatJRXApp",
       "permissions": [
-        "FOREGROUND_SERVICE"
-      ]
+        "INTERNET",
+        "ACCESS_NETWORK_STATE",
+        "ACCESS_WIFI_STATE",
+        "CHANGE_WIFI_STATE",
+        "WAKE_LOCK",
+        "FOREGROUND_SERVICE",
+        "VIBRATE",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "POST_NOTIFICATIONS"
+      ],
     },
     "web": {
       "output": "single",
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
+      "./withCleartextTraffic.js",
       "expo-router",
       [
         "expo-splash-screen",
