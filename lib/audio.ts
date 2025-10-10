@@ -57,7 +57,6 @@ export function playBeepLow() {
 }
 
 export function initAudio() {
-    console.log("MP3!!!!!!",require("../assets/ok.mp3"));
     AudioModule.setAudioModeAsync({
         shouldPlayInBackground: true,
         interruptionMode: 'duckOthers',
