@@ -1,4 +1,4 @@
-import { initAudio, playBeepHigh, playBeepLow, playSoundError, playSoundFiltered, playSoundKO, playSoundOK } from "@/lib/audio";
+import { playBeepHigh, playBeepLow, playSoundError, playSoundFiltered, playSoundKO, playSoundOK } from "@/lib/audio";
 import { addFrame, currentIndex, Frame, frames, getFrameCount, parseFrame, selectedFrame, setCurrentFrame, setCurrentIndex } from '@/lib/frames';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { createContext, useEffect, useRef, useState } from "react";
@@ -145,9 +145,7 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
                 const error = parts[3] === "1";
                 //console.log("Event parts: ",parts);
                 if(valid && !filtered)
-                {
-                    parseFrame(e.data.split("\n").slice(1).join("\n"));
-                    updateCurrentFrame(selectedFrame);
+                {   // Audio notification first
                     if(error)
                     {
                         playSoundKO();
@@ -156,6 +154,8 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
                     {
                         playSoundOK();
                     }
+                    parseFrame(e.data.split("\n").slice(1).join("\n"));
+                    updateCurrentFrame(selectedFrame);
                 }
                 else
                 {
@@ -301,8 +301,6 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
         }
         })();
 
-        initAudio();
-
         // Check periodically if messages are still coming
         timeoutRef.current = setInterval(() => {
             const delta = Date.now() - lastMessageRef.current;
@@ -342,6 +340,7 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
             if (timeoutRef.current) clearInterval(timeoutRef.current);*/
         };
     }, []);
+
 
   return (
     <AppContext.Provider value={{ time, sdMounted, discriOn, batteryPercentage, connected, deviceURL, setDeviceURL, frames, currentFrame, currentIndex, countdown, addFrame, setCountdown, nextFrame, prevFrame }}>

@@ -3,24 +3,27 @@ import { AudioModule, useAudioPlayer } from 'expo-audio';
 import { Platform } from 'react-native';
 
 export function useAudioAsset(assetId: number) {
-  const platform = Platform.OS;
-  const getAudioSource = () => {
-    console.log("getAudioSource for ",assetId);
-    if (!__DEV__ && platform === "android") {
-      const assetinfo = Asset.fromModule(assetId);
-      console.log("Android no dev => URI = ",assetinfo.localUri);
-      const rawPath = assetinfo.localUri?.replace("file://", "");
-      console.log("Raw path = ",rawPath);
-      if (!rawPath) return;
-      return { uri: rawPath };
-    }
-    return assetId;
-  };
-
-  const player = useAudioPlayer(getAudioSource());
-
-  return player;
+    const platform = Platform.OS;
+    const getAudioSource = () => {
+        console.log("getAudioSource for ",assetId);
+        if (!__DEV__ && platform === "android") {
+        const assetinfo = Asset.fromModule(assetId);
+        console.log("Android no dev => URI = ",assetinfo.localUri);
+        const rawPath = assetinfo.localUri?.replace("file://", "");
+        console.log("Raw path = ",rawPath);
+        if (!rawPath) return assetId;
+        return { uri: rawPath };
+        }
+        return assetId;
+    };
+    const player = useAudioPlayer(getAudioSource(), { updateInterval: 1000, downloadFirst: true });
+    // Force loading sound now, silently, but not 0 because it doesn't work...
+    player.volume = 0.0000000001;
+    player.play();
+    return player;
 }
+
+initAudio();
 
 const soundOK = useAudioAsset(require('@/assets/audios/ok.mp3'));
 const soundKO = useAudioAsset(require('@/assets/audios/ko.mp3'));
@@ -30,52 +33,39 @@ const beepHigh = useAudioAsset(require('@/assets/audios/counth.mp3'));
 const beepLow = useAudioAsset(require('@/assets/audios/countl.mp3'));
 
 export function playSoundOK() {
+    soundOK.volume = 1;
     soundOK.seekTo(0);
     soundOK.play();
-    setTimeout(() => {
-        soundOK.pause();
-    }, 350); // Pause sound at the end to stop ducking other audio sources
-
 }
 
 export function playSoundKO() {
+    soundKO.volume = 1;
     soundKO.seekTo(0);
     soundKO.play();
-    setTimeout(() => {
-        soundKO.pause();
-    }, 350); // Pause sound at the end to stop ducking other audio sources
 }
 
 export function playSoundError() {
+    soundError.volume = 1;
     soundError.seekTo(0);
     soundError.play();
-    setTimeout(() => {
-        soundError.pause();
-    }, 350); // Pause sound at the end to stop ducking other audio sources
 }
 
 export function playSoundFiltered() {
+    soundFiltered.volume = 1;
     soundFiltered.seekTo(0);
     soundFiltered.play();
-    setTimeout(() => {
-        soundFiltered.pause();
-    }, 350); // Pause sound at the end to stop ducking other audio sources
 }
 
 export function playBeepHigh() {
+    beepHigh.volume = 1;
     beepHigh.seekTo(0);
     beepHigh.play();
-    setTimeout(() => {
-        beepHigh.pause();
-    }, 300); // Pause sound at the end to stop ducking other audio sources
 }
 
 export function playBeepLow() {
+    beepLow.volume = 1;
     beepLow.seekTo(0);
     beepLow.play();
-    setTimeout(() => {
-        beepLow.pause();
-    }, 300); // Pause sound at the end to stop ducking other audio sources
 }
 
 export function initAudio() {
