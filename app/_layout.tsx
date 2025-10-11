@@ -2,7 +2,7 @@ import { AppContextProvider } from '@/context/AppContext';
 import { useKeepAwake } from "expo-keep-awake";
 import { Stack } from 'expo-router';
 import React from 'react';
-import { View } from 'react-native';
+import { StatusBar, View } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import Footer from '../components/Footer';
 import Header from '../components/Header';
@@ -14,6 +14,7 @@ export default function Layout() {
       <AppContextProvider>
           <View style={{flex:1}}>
             <SafeAreaView edges={['top']}>
+              <StatusBar translucent={false} barStyle={'dark-content'}/>
               <Header />
             </SafeAreaView>
             <Stack screenOptions={{
@@ -28,10 +29,10 @@ export default function Layout() {
                 },
               }}>
               {/* Main route to tabs */}
-              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+              <Stack.Screen name="(tabs)" options={{ headerShown: false, title: "Frame" }} />
 
               {/* Settings screen */}
-              <Stack.Screen name="settings" options={{ /*presentation: "modal",*/ title: "Settings ⚙️", headerShown: true }} />
+              <Stack.Screen name="settings" options={{ presentation: "modal", title: "Settings ⚙️", headerShown: true }} />
             </Stack>            
             <SafeAreaView edges={['bottom']}>
               <Footer />
