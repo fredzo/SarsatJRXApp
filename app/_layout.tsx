@@ -32,7 +32,7 @@ export default function Layout() {
               <Stack.Screen name="(tabs)" options={{ headerShown: false, title: "Frame" }} />
 
               {/* Settings screen */}
-              <Stack.Screen name="settings" options={{ presentation: "modal", title: "Settings ⚙️", headerShown: true }} />
+              <Stack.Screen name="settings" options={{ /* presentation: "modal", */ title: "Settings ⚙️", headerShown: true }} />
             </Stack>            
             <SafeAreaView edges={['bottom']}>
               <Footer />

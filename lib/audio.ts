@@ -17,9 +17,12 @@ export function useAudioAsset(assetId: number) {
         return assetId;
     };
     const player = useAudioPlayer(getAudioSource(), { updateInterval: 1000, downloadFirst: true });
-    // Force loading sound now, silently, but not 0 because it doesn't work...
-    player.volume = 0.0000000001;
-    player.play();
+    if(platform !== "web")
+    {
+        // Force loading sound now, silently, but not 0 because it doesn't work...
+        player.volume = 0.0000000001;
+        player.play();
+    }
     return player;
 }
 
