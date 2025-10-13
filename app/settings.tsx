@@ -1,10 +1,9 @@
 import { AppContext } from "@/context/AppContext";
-import { playSoundError, playSoundFiltered, playSoundKO, playSoundOK } from "@/lib/audio";
+import { setAudioFrameNotif, setCountDownBeep, setVibrateFrameNotif } from "@/lib/audio";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Speaker } from "lucide-react-native";
 import { default as React, useContext, useEffect, useState } from 'react';
-import { FlatList, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { FlatList, ScrollView, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 const DEFAULT_URLS = ["http://sarsatjrx.local", "http://localhost", "http://192.168.0.83", "http://10.0.2.2", "http://10.157.161.213"];
 
@@ -14,8 +13,30 @@ export default function SettingsScreen() {
   const [showList, setShowList] = useState(false);
   const { setDeviceURL, deviceURL } = useContext(AppContext);
 
+  const [countdownNotification, setCountdownNotification] = useState(true);
+  const [frameNotification, setFrameNotification] = useState(true);
+  const [frameVibration, setFrameVibration] = useState(true);
 
-  // 🔄 Load saved URLs and last used one on startup
+  // Save changes
+  const toggleCountdown = async (value: boolean) => {
+    setCountdownNotification(value);
+    setCountDownBeep(value);
+    await AsyncStorage.setItem('countdownNotification', String(value));
+  };
+
+  const toggleFrame = async (value: boolean) => {
+    setFrameNotification(value);
+    setAudioFrameNotif(value);
+    await AsyncStorage.setItem('frameNotification', String(value));
+  };
+
+  const toggleFrameVibration = async (value: boolean) => {
+    setFrameVibration(value);
+    setVibrateFrameNotif(value);
+    await AsyncStorage.setItem('frameVibration', String(value));
+  };
+
+  // 🔄 Load saved settings on startup
   useEffect(() => {
     (async () => {
       try {
@@ -26,6 +47,16 @@ export default function SettingsScreen() {
         }
       } catch (err) {
         console.warn("Error loading stored URLs", err);
+      }
+      try {
+      const countdown = await AsyncStorage.getItem('countdownNotification');
+      if (countdown !== null) toggleCountdown(countdown === 'true');
+      const frame = await AsyncStorage.getItem('frameNotification');
+      if (frame !== null) toggleFrame(frame === 'true');
+      const frameVibration = await AsyncStorage.getItem('frameVibration');
+      if (frameVibration !== null) toggleFrameVibration(frameVibration === 'true');
+      } catch (err) {
+        console.warn("Error loading notification settings", err);
       }
     })();
   }, []);
@@ -53,7 +84,7 @@ export default function SettingsScreen() {
         Decoder address
       </Text>
 
-      {/* Combo editable */}
+      {/* Editable combo */}
       <View
         style={{
           flexDirection: "row",
@@ -113,14 +144,48 @@ export default function SettingsScreen() {
           }}
         />
       )}
+      <Text style={styles.h1}>
+        App settings
+      </Text>
+      <View style={styles.card}>
+        <Text style={styles.label}>Countdown notification</Text>
+        <Switch
+          value={countdownNotification}
+          onValueChange={toggleCountdown}
+          trackColor={{ false: "#888", true: "#4ade80" }}
+          thumbColor={countdownNotification ? "#22c55e" : "#f4f3f4"}
+        />
+      </View>
+
+      {/* ---- Frame Notification ---- */}
+      <View style={styles.card}>
+        <Text style={styles.label}>Frame audio notification</Text>
+        <Switch
+          value={frameNotification}
+          onValueChange={toggleFrame}
+          trackColor={{ false: "#888", true: "#4ade80" }}
+          thumbColor={frameNotification ? "#22c55e" : "#f4f3f4"}
+        />
+      </View>
+      <View style={styles.card}>
+        <Text style={styles.label}>Frame vibrate notification</Text>
+        <Switch
+          value={frameVibration}
+          onValueChange={toggleFrameVibration}
+          trackColor={{ false: "#888", true: "#4ade80" }}
+          thumbColor={frameNotification ? "#22c55e" : "#f4f3f4"}
+        />
+      </View>
+      
       <ScrollView style={{ marginTop: 30 }}>
         <Text style={styles.h1}>Settings</Text>
+        { /*
         <Text style={styles.item}>WiFi SSID: MyDecoderSSID</Text>
         <Text style={styles.item}>WiFi Passkey: ********</Text>
         <Text style={styles.item}>Decoder Settings: Default</Text>
         <Text style={styles.item}>Display Settings: Dark Mode</Text>
-        <Text style={styles.item}>System Info: v1.0.0</Text>
-        <TouchableOpacity onPress={playSoundOK}>
+        <Text style={styles.item}>System Info: v1.0.0</Text> */ }
+        { /*<TouchableOpacity onPress={playSoundOK}>
           <Speaker size={28} color="cyan" /><Text>OK</Text>
         </TouchableOpacity>
         <TouchableOpacity onPress={playSoundKO}>
@@ -131,7 +196,7 @@ export default function SettingsScreen() {
         </TouchableOpacity>
         <TouchableOpacity onPress={playSoundFiltered}>
           <Speaker size={28} color="cyan" /><Text>Filtered</Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */ }
       </ScrollView>
     </View>
   );
@@ -140,5 +205,25 @@ export default function SettingsScreen() {
 const styles = StyleSheet.create({
   container:{ flex:1, backgroundColor:'#001a1a', padding:12 },
   h1:{ color:'#3fe6e6', fontSize:20, fontWeight:'700', marginBottom:12 },
-  item:{ color:'white', marginBottom:8 }
+  item:{ color:'white', marginBottom:8 },
+  card: {
+    backgroundColor: "#1e1e1e",
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    marginBottom: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  label: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "500",
+  },
 });
