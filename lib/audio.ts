@@ -1,3 +1,4 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Asset } from "expo-asset";
 import { AudioModule, useAudioPlayer } from 'expo-audio';
 import { Platform, Vibration } from 'react-native';
@@ -6,19 +7,37 @@ let countdownBeepOn: boolean = true;
 let audioFrameNotifOn: boolean = true;
 let vibrateFrameNotifOn: boolean = true;
 
-export function setCountDownBeep(on:boolean)
+export async function setCountDownBeep(on:boolean)
 {
     countdownBeepOn = on;
+    await AsyncStorage.setItem('countdownNotification', String(on));
 }
 
-export function setAudioFrameNotif(on:boolean)
+export function getCountDownBeep():boolean
+{
+    return countdownBeepOn;
+}
+
+export async function setAudioFrameNotif(on:boolean)
 {
     audioFrameNotifOn = on;
+    await AsyncStorage.setItem('frameNotification', String(on));
 }
 
-export function setVibrateFrameNotif(on:boolean)
+export function getAudioNotif():boolean
+{
+    return audioFrameNotifOn;
+}
+
+export async function setVibrateFrameNotif(on:boolean)
 {
     vibrateFrameNotifOn = on;
+    await AsyncStorage.setItem('frameVibration', String(on));
+}
+
+export function getVibrateNotif():boolean
+{
+    return vibrateFrameNotifOn;
 }
 
 export function useAudioAsset(assetId: number) {
@@ -124,7 +143,7 @@ export function playBeepLow() {
     }
 }
 
-export function initAudio() {
+export async function initAudio() {
     AudioModule.setAudioModeAsync({
         shouldPlayInBackground: true,
         interruptionMode: 'duckOthers',
@@ -132,5 +151,15 @@ export function initAudio() {
         playsInSilentMode: true,
         shouldRouteThroughEarpiece: false,
     });
+    try {
+        const countdown = await AsyncStorage.getItem('countdownNotification');
+        if (countdown !== null) countdownBeepOn = (countdown === 'true');
+        const frame = await AsyncStorage.getItem('frameNotification');
+        if (frame !== null) audioFrameNotifOn = (frame === 'true');
+        const frameVibration = await AsyncStorage.getItem('frameVibration');
+        if (frameVibration !== null) vibrateFrameNotifOn = (frameVibration === 'true');
+    } catch (err) {
+        console.warn("Error loading notification settings", err);
+    }
 }
 

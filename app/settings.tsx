@@ -1,5 +1,5 @@
 import { AppContext } from "@/context/AppContext";
-import { setAudioFrameNotif, setCountDownBeep, setVibrateFrameNotif } from "@/lib/audio";
+import { getAudioNotif, getCountDownBeep, getVibrateNotif, setAudioFrameNotif, setCountDownBeep, setVibrateFrameNotif } from "@/lib/audio";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { default as React, useContext, useEffect, useState } from 'react';
@@ -13,27 +13,24 @@ export default function SettingsScreen() {
   const [showList, setShowList] = useState(false);
   const { setDeviceURL, deviceURL } = useContext(AppContext);
 
-  const [countdownNotification, setCountdownNotification] = useState(true);
-  const [frameNotification, setFrameNotification] = useState(true);
-  const [frameVibration, setFrameVibration] = useState(true);
+  const [countdownNotification, setCountdownNotification] = useState(getCountDownBeep());
+  const [frameNotification, setFrameNotification] = useState(getAudioNotif());
+  const [frameVibration, setFrameVibration] = useState(getVibrateNotif());
 
   // Save changes
   const toggleCountdown = async (value: boolean) => {
     setCountdownNotification(value);
     setCountDownBeep(value);
-    await AsyncStorage.setItem('countdownNotification', String(value));
   };
 
   const toggleFrame = async (value: boolean) => {
     setFrameNotification(value);
     setAudioFrameNotif(value);
-    await AsyncStorage.setItem('frameNotification', String(value));
   };
 
   const toggleFrameVibration = async (value: boolean) => {
     setFrameVibration(value);
     setVibrateFrameNotif(value);
-    await AsyncStorage.setItem('frameVibration', String(value));
   };
 
   // 🔄 Load saved settings on startup
@@ -47,16 +44,6 @@ export default function SettingsScreen() {
         }
       } catch (err) {
         console.warn("Error loading stored URLs", err);
-      }
-      try {
-      const countdown = await AsyncStorage.getItem('countdownNotification');
-      if (countdown !== null) toggleCountdown(countdown === 'true');
-      const frame = await AsyncStorage.getItem('frameNotification');
-      if (frame !== null) toggleFrame(frame === 'true');
-      const frameVibration = await AsyncStorage.getItem('frameVibration');
-      if (frameVibration !== null) toggleFrameVibration(frameVibration === 'true');
-      } catch (err) {
-        console.warn("Error loading notification settings", err);
       }
     })();
   }, []);
@@ -171,8 +158,8 @@ export default function SettingsScreen() {
         />
       </View>
       
-      <ScrollView style={{ marginTop: 30 }}>
-        <Text style={styles.h1}>Settings</Text>
+      <ScrollView>
+        <Text style={styles.h1}>Decoder Settings</Text>
         { /*
         <Text style={styles.item}>WiFi SSID: MyDecoderSSID</Text>
         <Text style={styles.item}>WiFi Passkey: ********</Text>
@@ -198,7 +185,7 @@ export default function SettingsScreen() {
 
 const styles = StyleSheet.create({
   container:{ flex:1, backgroundColor:'#001a1a', padding:12 },
-  h1:{ color:'#3fe6e6', fontSize:20, fontWeight:'700', marginBottom:12 },
+  h1:{ color:'#3fe6e6', fontSize:20, fontWeight:'700', marginBottom:12, marginTop:20 },
   item:{ color:'white', marginBottom:8 },
   card: {
     backgroundColor: "#1e1e1e",
