@@ -152,8 +152,6 @@ export default function SettingsScreen() {
         <Switch
           value={countdownNotification}
           onValueChange={toggleCountdown}
-          trackColor={{ false: "#888", true: "#4ade80" }}
-          thumbColor={countdownNotification ? "#22c55e" : "#f4f3f4"}
         />
       </View>
 
@@ -163,8 +161,6 @@ export default function SettingsScreen() {
         <Switch
           value={frameNotification}
           onValueChange={toggleFrame}
-          trackColor={{ false: "#888", true: "#4ade80" }}
-          thumbColor={frameNotification ? "#22c55e" : "#f4f3f4"}
         />
       </View>
       <View style={styles.card}>
@@ -172,8 +168,6 @@ export default function SettingsScreen() {
         <Switch
           value={frameVibration}
           onValueChange={toggleFrameVibration}
-          trackColor={{ false: "#888", true: "#4ade80" }}
-          thumbColor={frameNotification ? "#22c55e" : "#f4f3f4"}
         />
       </View>
       
