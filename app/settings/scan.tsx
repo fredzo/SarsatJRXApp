@@ -16,7 +16,7 @@ const SCAN_SIZE = width * 0.7;
 export default function QRScanner() {
   const router = useRouter();
   const [permission, requestPermission] = useCameraPermissions();
-  const { setDeviceURL } = useContext(AppContext);
+  const { saveDeviceURL } = useContext(AppContext);
 
   const lineY = useSharedValue(0);
 
@@ -40,7 +40,7 @@ export default function QRScanner() {
   }));
 
   const handleBarcodeScanned = async ({ data }: { data: string }) => {
-    setDeviceURL(data);
+    saveDeviceURL(data);
     router.back(); // Ferme la modale après scan
   };
 

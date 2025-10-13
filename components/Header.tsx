@@ -66,8 +66,6 @@ export default function Header() {
   return (
     <View style={styles.header}>
       <Text style={styles.time}>{time}</Text>
-      <Icon iconNode={cardSd} style={{ marginLeft: 4, opacity: sdMounted ? 1 : 0.1 }} size={20} color="#FFFFFF"/>
-      <Activity style={{ marginLeft: 4, opacity: discriOn ? 1 : 0.1 }} size={20} color="#FFFFFF"/>
       {connected ? (
       <MonitorUp color="#FFFFFF" size={20} style={{marginLeft: 4}}/>
       ) : (
@@ -75,6 +73,8 @@ export default function Header() {
           <MonitorX color="#ff8484ff" size={20}  style={{marginLeft: 4}}/>
       </Animated.View>
       )}
+      <Icon iconNode={cardSd} style={{ marginLeft: 4, opacity: sdMounted ? 1 : 0.1 }} size={20} color="#FFFFFF"/>
+      <Activity style={{ marginLeft: 4, opacity: discriOn ? 1 : 0.1 }} size={20} color="#FFFFFF"/>
       <Text style={styles.title}>SarsatJRXApp</Text>
       <View style={styles.headerBattery}>
         { (batteryPercentage != undefined) && (<BatteryIndicator level={batteryPercentage} />) }

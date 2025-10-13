@@ -5,6 +5,8 @@ import React, { createContext, useEffect, useRef, useState } from "react";
 import { AppState } from "react-native";
 import EventSource, { MessageEvent } from 'react-native-sse';
 
+const DEFAULT_URLS = ["http://sarsatjrx.local", "http://localhost", "http://192.168.0.83", "http://10.0.2.2", "http://10.157.161.213"];
+
 type AppContextType = {
     // App
     time: string | null;
@@ -14,6 +16,8 @@ type AppContextType = {
     connected: boolean;
     deviceURL: string | null,
     setDeviceURL: (url: string) => void;
+    savedURLs: string[],
+    saveDeviceURL: (url: string) => void,
     // Frames
     frames: Frame[];
     currentFrame: Frame | null;
@@ -34,6 +38,8 @@ export const AppContext = createContext<AppContextType>({
     connected:false,
     deviceURL: null,
     setDeviceURL: () => {},
+    savedURLs: [] as string[],
+    saveDeviceURL: (url: string) => {},
     // Frames
     frames: [],
     currentFrame: null,
@@ -59,6 +65,7 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
     const [batteryPercentage, setBatteryPercentage] = useState<number | null>(null);
     // Connection management
     const [deviceURL, setDeviceUrlValue] =  useState<string | null>(storedDeviceURL);
+    const [savedURLs, setSavedURLs] = useState<string[]>(DEFAULT_URLS);
     const reconnectTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
     const retryDelay = useRef(1000); // 1s au départ
     const maxDelay = 5000; // 5s max
@@ -282,23 +289,32 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
 
         // Load previously saved device URL
         (async () => {
-        try {
-            const saved = await AsyncStorage.getItem("lastDeviceURL");
-            if(saved)
-            {   // Reload previous value
-                console.log("⚠️ Restored device URL :", saved);
-                storedDeviceURL = saved;
-                setDeviceUrlValue(saved);
-                // Wait for deviceUrl before connection
-                connect();
+            try {
+                const saved = await AsyncStorage.getItem("lastDeviceURL");
+                if(saved)
+                {   // Reload previous value
+                    console.log("⚠️ Restored device URL :", saved);
+                    storedDeviceURL = saved;
+                    setDeviceUrlValue(saved);
+                    // Wait for deviceUrl before connection
+                    connect();
+                }
+                else
+                {   // Init to default
+                    setDeviceURL("http://sarsatjrx.local");
+                }
+            } catch (e) {
+                console.warn("Error loading device URL", e);
             }
-            else
-            {   // Init to default
-                setDeviceURL("http://sarsatjrx.local");
+            try {
+                const stored = await AsyncStorage.getItem("deviceURLs");
+                if (stored) {
+                const parsed = JSON.parse(stored);
+                setSavedURLs([...new Set([...DEFAULT_URLS, ...parsed])]);
+                }
+            } catch (err) {
+                console.warn("Error loading stored URLs", err);
             }
-        } catch (e) {
-            console.warn("Error loading device URL", e);
-        }
         })();
 
         // Check periodically if messages are still coming
@@ -341,9 +357,19 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
         };
     }, []);
 
+    // 💾 Save selected or entered URL
+    const saveDeviceURL = async (url: string) => {
+        if (!url || url.trim().length < 5) return;
+        url = url.trim().replace(/\/$/, "");
+        if(!url.startsWith("http://")) url = "http://" + url;
+        const newList = [...new Set([url, ...savedURLs])];
+        setSavedURLs(newList);
+        setDeviceURL(url);
+        await AsyncStorage.setItem("deviceURLs", JSON.stringify(newList));
+    };
 
   return (
-    <AppContext.Provider value={{ time, sdMounted, discriOn, batteryPercentage, connected, deviceURL, setDeviceURL, frames, currentFrame, currentIndex, countdown, addFrame, setCountdown, nextFrame, prevFrame }}>
+    <AppContext.Provider value={{ time, sdMounted, discriOn, batteryPercentage, connected, deviceURL, setDeviceURL, savedURLs, saveDeviceURL, frames, currentFrame, currentIndex, countdown, addFrame, setCountdown, nextFrame, prevFrame }}>
       {children}
     </AppContext.Provider>
   );

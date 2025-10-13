@@ -1,25 +1,26 @@
 import { AppContext } from "@/context/AppContext";
 import { getAudioNotif, getCountDownBeep, getVibrateNotif, setAudioFrameNotif, setCountDownBeep, setVibrateFrameNotif } from "@/lib/audio";
 import { Ionicons } from "@expo/vector-icons";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import { QrCode } from "lucide-react-native";
 import { default as React, useContext, useEffect, useState } from 'react';
 import { FlatList, ScrollView, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
-const DEFAULT_URLS = ["http://sarsatjrx.local", "http://localhost", "http://192.168.0.83", "http://10.0.2.2", "http://10.157.161.213"];
-
-
 export default function SettingsScreen() {
-  const [savedURLs, setSavedURLs] = useState<string[]>(DEFAULT_URLS);
   const [showList, setShowList] = useState(false);
-  const { setDeviceURL, deviceURL } = useContext(AppContext);
+  const { saveDeviceURL, savedURLs, deviceURL, setDeviceURL } = useContext(AppContext);
 
   const [countdownNotification, setCountdownNotification] = useState(getCountDownBeep());
   const [frameNotification, setFrameNotification] = useState(getAudioNotif());
   const [frameVibration, setFrameVibration] = useState(getVibrateNotif());
 
+  const [localURL, setLocalURL] = useState(deviceURL); // état local indépendant
+
   const router = useRouter();
+
+  useEffect(() => {
+    setLocalURL(deviceURL);
+  }, [deviceURL]);
 
   // Save changes
   const toggleCountdown = async (value: boolean) => {
@@ -35,32 +36,6 @@ export default function SettingsScreen() {
   const toggleFrameVibration = async (value: boolean) => {
     setFrameVibration(value);
     setVibrateFrameNotif(value);
-  };
-
-  // 🔄 Load saved settings on startup
-  useEffect(() => {
-    (async () => {
-      try {
-        const stored = await AsyncStorage.getItem("deviceURLs");
-        if (stored) {
-          const parsed = JSON.parse(stored);
-          setSavedURLs([...new Set([...DEFAULT_URLS, ...parsed])]);
-        }
-      } catch (err) {
-        console.warn("Error loading stored URLs", err);
-      }
-    })();
-  }, []);
-
-  // 💾 Save selected or entered URL
-  const saveDeviceURL = async (url: string) => {
-    if (!url || url.trim().length < 5) return;
-    url = url.trim().replace(/\/$/, "");
-    if(!url.startsWith("http://")) url = "http://" + url;
-    const newList = [...new Set([url, ...savedURLs])];
-    setSavedURLs(newList);
-    setDeviceURL(url);
-    await AsyncStorage.setItem("deviceURLs", JSON.stringify(newList));
   };
 
   // 🧭 Handle selection from combo
@@ -88,12 +63,18 @@ export default function SettingsScreen() {
       >
         <TextInput
           style={{ flex: 1, color: "white", fontSize: 16 }}
-          defaultValue={deviceURL ? deviceURL : ""}
+          value={localURL ? localURL : ""}
+          onChangeText={setLocalURL}
           placeholder="Enter or select URL"
           placeholderTextColor="#777"
           onFocus={() => setShowList(true)}
+          onBlur={(e : any) => {
+            if(localURL) saveDeviceURL(localURL);
+            setShowList(false);
+          }
+          }
           onSubmitEditing={(e : any) => {
-            saveDeviceURL(e.nativeEvent.text);
+            if(localURL) saveDeviceURL(localURL);
             setShowList(false);
           }}
         />
