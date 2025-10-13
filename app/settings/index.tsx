@@ -2,6 +2,8 @@ import { AppContext } from "@/context/AppContext";
 import { getAudioNotif, getCountDownBeep, getVibrateNotif, setAudioFrameNotif, setCountDownBeep, setVibrateFrameNotif } from "@/lib/audio";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useRouter } from "expo-router";
+import { QrCode } from "lucide-react-native";
 import { default as React, useContext, useEffect, useState } from 'react';
 import { FlatList, ScrollView, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
@@ -16,6 +18,8 @@ export default function SettingsScreen() {
   const [countdownNotification, setCountdownNotification] = useState(getCountDownBeep());
   const [frameNotification, setFrameNotification] = useState(getAudioNotif());
   const [frameVibration, setFrameVibration] = useState(getVibrateNotif());
+
+  const router = useRouter();
 
   // Save changes
   const toggleCountdown = async (value: boolean) => {
@@ -131,6 +135,16 @@ export default function SettingsScreen() {
           }}
         />
       )}
+
+      {/* ---- QR Code Scan Button ---- */}
+      <TouchableOpacity
+        style={styles.qrButton}
+        onPress={() => router.push("/settings/scan")}
+      >
+        <QrCode color="#fff" size={20} />
+        <Text style={styles.qrButtonText}>Scan QR Code</Text>
+      </TouchableOpacity>
+
       <Text style={styles.h1}>
         App settings
       </Text>
@@ -206,5 +220,21 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 16,
     fontWeight: "500",
+  },
+  qrButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#2563eb",
+    borderRadius: 8,
+    marginTop: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    alignSelf: "flex-start",
+  },
+  qrButtonText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "600",
+    marginLeft: 8,
   },
 });
