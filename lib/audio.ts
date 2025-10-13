@@ -82,7 +82,7 @@ export function playSoundOK() {
     }
     if(vibrateFrameNotifOn)
     {
-        Vibration.vibrate(500);
+        Vibration.vibrate([0,500,0,0]);
     }
 }
 
