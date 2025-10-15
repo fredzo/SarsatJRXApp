@@ -25,6 +25,7 @@ type AppContextType = {
     countdown: number | null;
     addFrame: (data: Record<string, string>) => void;
     setCountdown: (countdown: number) => void;
+    resetCountdown: () => void;
     nextFrame: () => void;
     prevFrame: () => void;
 };
@@ -47,6 +48,7 @@ export const AppContext = createContext<AppContextType>({
     countdown: null,
     addFrame: () => {},
     setCountdown: () => {},
+    resetCountdown: () => {},
     nextFrame: () => {},
     prevFrame: () => {},
 });
@@ -105,6 +107,17 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
             parseFrame(text);
             updateCurrentFrame(selectedFrame);
         } catch {}
+    }
+
+    async function resetCountdown() {
+        if(!storedDeviceURL) return;
+        try {
+            // Feedback sound
+            playSoundFiltered();
+            // Call endpoint
+            const resp = await fetch(storedDeviceURL+'/resetcd');
+        } catch {
+        }
     }
 
     const nextFrame = () => {
@@ -369,7 +382,7 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
     };
 
   return (
-    <AppContext.Provider value={{ time, sdMounted, discriOn, batteryPercentage, connected, deviceURL, setDeviceURL, savedURLs, saveDeviceURL, frames, currentFrame, currentIndex, countdown, addFrame, setCountdown, nextFrame, prevFrame }}>
+    <AppContext.Provider value={{ time, sdMounted, discriOn, batteryPercentage, connected, deviceURL, setDeviceURL, savedURLs, saveDeviceURL, frames, currentFrame, currentIndex, countdown, addFrame, setCountdown, resetCountdown, nextFrame, prevFrame }}>
       {children}
     </AppContext.Provider>
   );
