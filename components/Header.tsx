@@ -1,7 +1,8 @@
 import { AppContext } from '@/context/AppContext';
+import { FrameState } from '@/lib/frames';
 import { cardSd } from '@lucide/lab';
 import { Activity, Icon, MonitorUp, MonitorX } from 'lucide-react-native';
-import React, { useContext, useEffect, useRef } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import { Animated, StyleSheet, Text, View } from 'react-native';
 
 type BatteryProps = {
@@ -37,8 +38,12 @@ export const BatteryIndicator: React.FC<BatteryProps> = ({ level }) => {
 };
 
 export default function Header() {
-  const { time, sdMounted, discriOn, batteryPercentage, connected } = useContext(AppContext);
+  const { time, sdMounted, discriOn, batteryPercentage, connected, currentFrame } = useContext(AppContext);
   const blinkAnim = useRef(new Animated.Value(1)).current;
+
+  // Led handling
+  const [ledRedColor, setLedRedColor] = useState("#555");
+  const [ledBlueColor, setLedBlueColor] = useState("#555");
 
   useEffect(() => {
     if (!connected) {
@@ -63,6 +68,25 @@ export default function Header() {
     }
   }, [connected]);  
 
+  useEffect(() => {
+    if (!currentFrame) return;
+
+    if (currentFrame.state === FrameState.INVALID || currentFrame.state === FrameState.KO) 
+    { // Invalid frame => red led on
+      setLedRedColor("#ff3333");
+    }
+    if (currentFrame.state !== FrameState.INVALID) 
+    { // Valid frame => blue led on
+      setLedBlueColor("#3399ff");
+    }
+    const timerRed = setTimeout(() => setLedRedColor("#555"), 2000);
+    const timerBlue = setTimeout(() => setLedBlueColor("#555"), 2000);
+    return () => {
+      clearTimeout(timerRed);
+      clearTimeout(timerBlue);
+    }
+  }, [currentFrame]);  
+
   return (
     <View style={styles.header}>
       <Text style={styles.time}>{time}</Text>
@@ -80,8 +104,8 @@ export default function Header() {
         { (batteryPercentage != undefined) && (<BatteryIndicator level={batteryPercentage} />) }
       </View>
       <View style={styles.leds}>
-          <View key={0} style={[styles.led, {backgroundColor: 'lime'}]} />
-          <View key={1} style={[styles.led, {backgroundColor: 'grey'}]} />
+          <View key={0} style={[styles.led, {backgroundColor: ledRedColor}]} />
+          <View key={1} style={[styles.led, {backgroundColor: ledBlueColor}]} />
       </View>
     </View>
   );
@@ -123,7 +147,7 @@ const styles = StyleSheet.create({
   title: { flex: 1, color: '#3fe6e6', fontSize: 18, fontWeight: '700', textAlign:'center' },
   batt: { color: 'white', fontSize: 12, width:100 },
   leds: { paddingLeft: 10, flexDirection: 'row' },
-  led: { width: 10, height: 10, borderRadius: 5, marginHorizontal: 2 },
+  led: { width: 14, height: 14, borderRadius: 7, marginHorizontal: 2 },
   batteryWrapper: {
     flexDirection: "row",
     alignItems: "center",
