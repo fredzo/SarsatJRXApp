@@ -3,12 +3,13 @@ import { getAudioNotif, getCountDownBeep, getVibrateNotif, setAudioFrameNotif, s
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { QrCode } from "lucide-react-native";
-import { default as React, useContext, useEffect, useState } from 'react';
+import { default as React, useContext, useEffect, useRef, useState } from 'react';
 import { FlatList, ScrollView, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 export default function SettingsScreen() {
   const [showList, setShowList] = useState(false);
-  const { saveDeviceURL, savedURLs, deviceURL, setDeviceURL } = useContext(AppContext);
+  const { saveDeviceURL, savedURLs, deviceURL, connected } = useContext(AppContext);
+  const prevConnected = useRef(connected);
 
   const [countdownNotification, setCountdownNotification] = useState(getCountDownBeep());
   const [frameNotification, setFrameNotification] = useState(getAudioNotif());
@@ -21,6 +22,15 @@ export default function SettingsScreen() {
   useEffect(() => {
     setLocalURL(deviceURL);
   }, [deviceURL]);
+
+  useEffect(() => {
+    console.log("Use effect connected :", connected);
+    if (!prevConnected.current && connected) {
+      // Detect connection and go back to main screen
+      router.back();
+    }
+    prevConnected.current = connected;
+  }, [connected]);
 
   // Save changes
   const toggleCountdown = async (value: boolean) => {
