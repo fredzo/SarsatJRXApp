@@ -1,5 +1,5 @@
 import { AppContext } from "@/context/AppContext";
-import { getAudioNotif, getCountDownBeep, getVibrateNotif, setAudioFrameNotif, setCountDownBeep, setVibrateFrameNotif } from "@/lib/audio";
+import { getAudioFeedback, getAudioNotif, getCountDownBeep, getVibrateFeedback, getVibrateNotif, setAudioFeedback, setAudioFrameNotif, setCountDownBeep, setVibrateFeendback, setVibrateFrameNotif } from "@/lib/notifications";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { QrCode } from "lucide-react-native";
@@ -14,6 +14,8 @@ export default function SettingsScreen() {
   const [countdownNotification, setCountdownNotification] = useState(getCountDownBeep());
   const [frameNotification, setFrameNotification] = useState(getAudioNotif());
   const [frameVibration, setFrameVibration] = useState(getVibrateNotif());
+  const [audioFeedback, setAudioFeedbackState] = useState(getAudioFeedback());
+  const [vibrationFeedback, setVibrateFeendbackState] = useState(getVibrateFeedback());
 
   const [localURL, setLocalURL] = useState(deviceURL); // état local indépendant
 
@@ -47,6 +49,17 @@ export default function SettingsScreen() {
     setFrameVibration(value);
     setVibrateFrameNotif(value);
   };
+
+  const toggleAudioFeebdack = async (value: boolean) => {
+    setAudioFeedbackState(value);
+    setAudioFeedback(value);
+  };
+
+  const toggleVibrationFeedback = async (value: boolean) => {
+    setVibrateFeendbackState(value);
+    setVibrateFeendback(value);
+  };
+
 
   // 🧭 Handle selection from combo
   const handleSelect = (url: string) => {
@@ -118,7 +131,8 @@ export default function SettingsScreen() {
             </TouchableOpacity>
           )}
           style={{
-            maxHeight: 180,
+            maxHeight: 300,
+            minHeight: 100,
             marginTop: 6,
             borderRadius: 8,
             borderColor: "#333",
@@ -160,6 +174,22 @@ export default function SettingsScreen() {
         <Switch
           value={frameVibration}
           onValueChange={toggleFrameVibration}
+        />
+      </View>
+      
+      {/* ---- Feedback Notification ---- */}
+      <View style={styles.card}>
+        <Text style={styles.label}>Audio feedback</Text>
+        <Switch
+          value={audioFeedback}
+          onValueChange={toggleAudioFeebdack}
+        />
+      </View>
+      <View style={styles.card}>
+        <Text style={styles.label}>Vibration feedback</Text>
+        <Switch
+          value={vibrationFeedback}
+          onValueChange={toggleVibrationFeedback}
         />
       </View>
       

@@ -6,11 +6,20 @@ import { Platform, Vibration } from 'react-native';
 let countdownBeepOn: boolean = true;
 let audioFrameNotifOn: boolean = true;
 let vibrateFrameNotifOn: boolean = true;
+let audioFeedbackOn: boolean = true;
+let vibrateFeedbackOn: boolean = true;
+
+const AUDIO_COUNTDOWN_PREF = 'audioCountdown';
+const AUDIO_FRAME_NOTIF_PREF = 'audioFrameNotif';
+const VIBRATION_FRAME_NOTIF_PREF = 'vibrationFrameNotif';
+const AUDIO_FEEDBACK_PREF = 'audioFeedback';
+const VIBRATION_FEEDBACK_PREF = 'vibrationFeedback';
+
 
 export async function setCountDownBeep(on:boolean)
 {
     countdownBeepOn = on;
-    await AsyncStorage.setItem('countdownNotification', String(on));
+    await AsyncStorage.setItem(AUDIO_COUNTDOWN_PREF, String(on));
 }
 
 export function getCountDownBeep():boolean
@@ -21,7 +30,7 @@ export function getCountDownBeep():boolean
 export async function setAudioFrameNotif(on:boolean)
 {
     audioFrameNotifOn = on;
-    await AsyncStorage.setItem('frameNotification', String(on));
+    await AsyncStorage.setItem(AUDIO_FRAME_NOTIF_PREF, String(on));
 }
 
 export function getAudioNotif():boolean
@@ -32,12 +41,34 @@ export function getAudioNotif():boolean
 export async function setVibrateFrameNotif(on:boolean)
 {
     vibrateFrameNotifOn = on;
-    await AsyncStorage.setItem('frameVibration', String(on));
+    await AsyncStorage.setItem(VIBRATION_FRAME_NOTIF_PREF, String(on));
 }
 
 export function getVibrateNotif():boolean
 {
     return vibrateFrameNotifOn;
+}
+
+export async function setAudioFeedback(on:boolean)
+{
+    audioFeedbackOn = on;
+    await AsyncStorage.setItem(AUDIO_FEEDBACK_PREF, String(on));
+}
+
+export function getAudioFeedback():boolean
+{
+    return audioFeedbackOn;
+}
+
+export async function setVibrateFeendback(on:boolean)
+{
+    vibrateFeedbackOn = on;
+    await AsyncStorage.setItem(VIBRATION_FEEDBACK_PREF, String(on));
+}
+
+export function getVibrateFeedback():boolean
+{
+    return vibrateFeedbackOn;
 }
 
 export function useAudioAsset(assetId: number) {
@@ -125,6 +156,19 @@ export function playSoundFiltered() {
     }
 }
 
+export function feedbackNotification() {
+    if(audioFeedbackOn)
+    {
+        soundFiltered.volume = 1;
+        soundFiltered.seekTo(0);
+        soundFiltered.play();
+    }
+    if(vibrateFeedbackOn)
+    {
+        Vibration.vibrate([0, 200, 100, 200]); 
+    }
+}
+
 export function playBeepHigh() {
     if(countdownBeepOn)
     {
@@ -152,12 +196,19 @@ export async function initAudio() {
         shouldRouteThroughEarpiece: false,
     });
     try {
-        const countdown = await AsyncStorage.getItem('countdownNotification');
+        // Countdown
+        const countdown = await AsyncStorage.getItem(AUDIO_COUNTDOWN_PREF);
         if (countdown !== null) countdownBeepOn = (countdown === 'true');
-        const frame = await AsyncStorage.getItem('frameNotification');
+        // Frame
+        const frame = await AsyncStorage.getItem(AUDIO_FRAME_NOTIF_PREF);
         if (frame !== null) audioFrameNotifOn = (frame === 'true');
-        const frameVibration = await AsyncStorage.getItem('frameVibration');
+        const frameVibration = await AsyncStorage.getItem(VIBRATION_FRAME_NOTIF_PREF);
         if (frameVibration !== null) vibrateFrameNotifOn = (frameVibration === 'true');
+        // Feedback
+        const audioFeedback = await AsyncStorage.getItem(AUDIO_FEEDBACK_PREF);
+        if (audioFeedback !== null) audioFeedbackOn = (audioFeedback === 'true');
+        const vibrationFeedback = await AsyncStorage.getItem(VIBRATION_FEEDBACK_PREF);
+        if (vibrationFeedback !== null) vibrateFeedbackOn = (vibrationFeedback === 'true');
     } catch (err) {
         console.warn("Error loading notification settings", err);
     }

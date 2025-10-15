@@ -1,5 +1,5 @@
-import { playBeepHigh, playBeepLow, playSoundError, playSoundFiltered, playSoundKO, playSoundOK } from "@/lib/audio";
 import { addFrame, currentIndex, Frame, frames, getFrameCount, parseFrame, selectedFrame, setCurrentFrame, setCurrentIndex } from '@/lib/frames';
+import { feedbackNotification, playBeepHigh, playBeepLow, playSoundError, playSoundFiltered, playSoundKO, playSoundOK } from "@/lib/notifications";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { createContext, useEffect, useRef, useState } from "react";
 import { AppState } from "react-native";
@@ -113,7 +113,7 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
         if(!storedDeviceURL) return;
         try {
             // Feedback sound
-            playSoundFiltered();
+            feedbackNotification();
             // Call endpoint
             const resp = await fetch(storedDeviceURL+'/resetcd');
         } catch {
@@ -242,6 +242,7 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
         globalEventSource.addEventListener("open", () => {
             console.log("✅ EventSource connected");
             retryDelay.current = 1000; // reset reconnection delay
+            feedbackNotification(); // Feedback notif
             if(getFrameCount() == 0)
             {   // No frames yet, check for frames on the decoder
                 fetchFrames();
