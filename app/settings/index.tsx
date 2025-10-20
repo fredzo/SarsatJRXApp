@@ -8,7 +8,7 @@ import { FlatList, ScrollView, StyleSheet, Switch, Text, TextInput, TouchableOpa
 
 export default function SettingsScreen() {
   const [showList, setShowList] = useState(false);
-  const { saveDeviceURL, savedURLs, deviceURL, connected } = useContext(AppContext);
+  const { saveDeviceURL, savedURLs, deviceURL, connected, config } = useContext(AppContext);
   const prevConnected = useRef(connected);
 
   const [countdownNotification, setCountdownNotification] = useState(getCountDownBeep());
@@ -195,6 +195,14 @@ export default function SettingsScreen() {
       
       <ScrollView>
         <Text style={styles.h1}>Decoder Settings</Text>
+        {config && Object.entries(config.data).map(([k,v]) => (
+              <View style={styles.card}>
+                <Text style={styles.label}>{k}</Text>
+                <Text style={styles.label}>{v}</Text>
+              </View>
+            ))
+        }
+
         { /*
         <Text style={styles.item}>WiFi SSID: MyDecoderSSID</Text>
         <Text style={styles.item}>WiFi Passkey: ********</Text>

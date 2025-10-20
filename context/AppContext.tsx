@@ -1,4 +1,5 @@
-import { addFrame, currentIndex, Frame, frames, getFrameCount, parseFrame, selectedFrame, setCurrentFrame, setCurrentIndex } from '@/lib/frames';
+import { Config, currentConfig, parseConfig } from '@/lib/config';
+import { addFrame, currentIndex, Frame, frames, parseFrame, selectedFrame, setCurrentFrame, setCurrentIndex } from '@/lib/frames';
 import { feedbackNotification, playBeepHigh, playBeepLow, playSoundError, playSoundFiltered, playSoundKO, playSoundOK } from "@/lib/notifications";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { createContext, useEffect, useRef, useState } from "react";
@@ -28,6 +29,8 @@ type AppContextType = {
     resetCountdown: () => void;
     nextFrame: () => void;
     prevFrame: () => void;
+    // Config
+    config: Config | null;
 };
 
 export const AppContext = createContext<AppContextType>({
@@ -51,6 +54,8 @@ export const AppContext = createContext<AppContextType>({
     resetCountdown: () => {},
     nextFrame: () => {},
     prevFrame: () => {},
+    // Config
+    config: null,
 });
 
 let globalEventSource:EventSource | null = null;
@@ -81,6 +86,8 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
     const [countdown, setCountdownValue] = useState<number | null>(null);
     // Current frame
     const [currentFrame, updateCurrentFrame] = useState(selectedFrame);
+    // Config
+    const [config, updateConfig] = useState(currentConfig);
 
     const setCountdown = (countdown: number) => {
         setCountdownValue(i => (countdown));
@@ -155,6 +162,21 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
                 setBatteryPercentage(parseInt(parts[4]));
             }
         } 
+        else if (e.data.startsWith('config'))
+        {
+            const configData = e.data.split("\n").slice(1).join("\n");
+            parseConfig(configData);
+            updateConfig(currentConfig);
+        }
+        else if (e.data.startsWith('frames'))
+        {   // Read frames from device
+            const frames = e.data.split("\n").slice(1).join("\n");
+            frames.split("\n#\n").forEach(line => 
+            {
+                parseFrame(line);
+                updateCurrentFrame(selectedFrame);
+            });
+        }
         else if (e.data.startsWith('frame'))
         {
             const parts = e.data.split("\n")[0].split(';');
@@ -243,11 +265,13 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
             console.log("✅ EventSource connected");
             retryDelay.current = 1000; // reset reconnection delay
             feedbackNotification(); // Feedback notif
+            // Frames are now pushed by the device upon connection
+            /*
             if(getFrameCount() == 0)
             {   // No frames yet, check for frames on the decoder
                 fetchFrames();
                 updateCurrentFrame(selectedFrame);
-            }
+            }*/
             // Reset watchdog timer
             lastMessageRef.current = Date.now();
             connecting = false;
@@ -383,7 +407,7 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
     };
 
   return (
-    <AppContext.Provider value={{ time, sdMounted, discriOn, batteryPercentage, connected, deviceURL, setDeviceURL, savedURLs, saveDeviceURL, frames, currentFrame, currentIndex, countdown, addFrame, setCountdown, resetCountdown, nextFrame, prevFrame }}>
+    <AppContext.Provider value={{ time, sdMounted, discriOn, batteryPercentage, connected, deviceURL, setDeviceURL, savedURLs, saveDeviceURL, frames, currentFrame, currentIndex, countdown, addFrame, setCountdown, resetCountdown, nextFrame, prevFrame, config }}>
       {children}
     </AppContext.Provider>
   );
