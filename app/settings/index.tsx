@@ -18,7 +18,7 @@ export default function SettingsScreen() {
   const [audioFeedback, setAudioFeedbackState] = useState(getAudioFeedback());
   const [vibrationFeedback, setVibrateFeendbackState] = useState(getVibrateFeedback());
 
-  const [localURL, setLocalURL] = useState(deviceURL); // état local indépendant
+  const [localURL, setLocalURL] = useState(deviceURL);
 
   const router = useRouter();
 
@@ -119,7 +119,7 @@ export default function SettingsScreen() {
               name="chevron-down"
               color="#ccc"
               size={20}
-              style={{ marginLeft: 8 }}
+              style={{ margin: 4 }}
             />
           </Animated.View>
         </TouchableOpacity>
