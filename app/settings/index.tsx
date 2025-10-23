@@ -4,7 +4,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { QrCode } from "lucide-react-native";
 import { default as React, useContext, useEffect, useRef, useState } from 'react';
-import { FlatList, ScrollView, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ScrollView, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import Animated, { LinearTransition, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 
 export default function SettingsScreen() {
   const [showList, setShowList] = useState(false);
@@ -67,8 +68,19 @@ export default function SettingsScreen() {
     setShowList(false);
   };
 
+  const rotation = useSharedValue(0);
+
+  useEffect(() => {
+    rotation.value = withTiming(showList ? 180 : 0, { duration: 200 });
+  }, [showList]);
+
+  const chevronStyle = useAnimatedStyle(() => ({
+    transform: [{ rotate: `${rotation.value}deg` }],
+  }));
+
+
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container}>
       <Text style={styles.h1}>
         Decoder address
       </Text>
@@ -102,22 +114,32 @@ export default function SettingsScreen() {
           }}
         />
         <TouchableOpacity onPress={() => setShowList((v) => !v)}>
-          <Ionicons
-            name={showList ? "chevron-up" : "chevron-down"}
-            color="#ccc"
-            size={20}
-            style={{ marginLeft: 8 }}
-          />
+          <Animated.View style={chevronStyle}>
+            <Ionicons
+              name="chevron-down"
+              color="#ccc"
+              size={20}
+              style={{ marginLeft: 8 }}
+            />
+          </Animated.View>
         </TouchableOpacity>
       </View>
 
       {/* Dropdown list */}
       {showList && (
-        <FlatList
-          data={savedURLs}
-          keyExtractor={(item) => item}
-          renderItem={({ item }) => (
+        <Animated.View
+          layout={LinearTransition.springify()}
+          style={{
+            marginTop: 6,
+            borderRadius: 8,
+            borderColor: "#333",
+            borderWidth: 1,
+            overflow: "hidden",
+          }}
+        >
+          {savedURLs.map((item) => (
             <TouchableOpacity
+              key={item}
               onPress={() => handleSelect(item)}
               style={{
                 backgroundColor: "#1a1a1a",
@@ -129,16 +151,8 @@ export default function SettingsScreen() {
             >
               <Text style={{ color: "white" }}>{item}</Text>
             </TouchableOpacity>
-          )}
-          style={{
-            maxHeight: 300,
-            minHeight: 100,
-            marginTop: 6,
-            borderRadius: 8,
-            borderColor: "#333",
-            borderWidth: 1,
-          }}
-        />
+          ))}
+        </Animated.View>
       )}
 
       {/* ---- QR Code Scan Button ---- */}
@@ -193,7 +207,7 @@ export default function SettingsScreen() {
         />
       </View>
       
-      <ScrollView>
+      <View>
         <Text style={styles.h1}>Decoder Settings</Text>
         {config && Object.entries(config.data).map(([k,v]) => (
               <View style={styles.card}>
@@ -221,13 +235,13 @@ export default function SettingsScreen() {
         <TouchableOpacity onPress={playSoundFiltered}>
           <Speaker size={28} color="cyan" /><Text>Filtered</Text>
         </TouchableOpacity> */ }
-      </ScrollView>
-    </View>
+      </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container:{ flex:1, backgroundColor:'#001a1a', padding:12 },
+  container:{ flex:1, backgroundColor:'#001a1a', padding:0 },
   h1:{ color:'#3fe6e6', fontSize:20, fontWeight:'700', marginBottom:12, marginTop:20 },
   item:{ color:'white', marginBottom:8 },
   card: {
