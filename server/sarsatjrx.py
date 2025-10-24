@@ -75,7 +75,60 @@ async def get_all_frames():
         "\n".join(f"{k}={v}" for k, v in frame.items())
         for frame in frames)
 
+config_text = """data: config
+data: wifiSsid=ssid
+data: wifiPassPhrase=passphrase
+data: wifiSsid1=ssid1
+data: wifiPassPhrase1=passphrase1
+data: wifiSsid2=ssid2
+data: wifiPassPhrase2=passphrase2
+data: timeZone=TimZoneParis
+data: displayReverse=false
+data: showBatPercentage=true
+data: showBatWarnMessage=true
+data: screenOffOnCharge=true
+data: buzzerLevel=95
+data: touchSound=true
+data: frameSound=true
+data: countdownSound=true
+data: countdownLeds=true
+data: reloadCountdown=false
+data: countdownDuration=50
+data: allowFrameSimu=false
+data: fliterOrbito=true
+data: filterInvalid=false
+data: wifiMode=STA
+data: wifiStatus=Connected to access point
+data: wifiRssi=-57dBm
+data: wifiSsid=connectedssid
+data: wifiIP=192.168.0.90
+data: wifiGatewayIP=192.168.0.1
+data: wifiDNS1=192.168.0.1
+data: wifiDNS2=192.168.0.2
+data: wifiMacAddress=AA:BB:CC:DD:EE:FF
+data: wifiSubnetMask=255.255.255.0
+data: rtcDate=10/10/2025 - 10:15:12
+data: rtcNtpSync=true
+data: sdCardMounted=true
+data: sdCardTotalBytes=26548015
+data: sdCardUsedBytes=152000
+data: firmwareVersion=1.0.1
+data: sketchInfo=1414 kn (MD5=fdsfdsf...sdffds)
+data: chipModel=ESP32-D0W-V3
+data: chipCores=2
+data: chipFrequency=240 MHz
+data: ramSize=234
+data: ramFree=51
+data: psRamSize=4096
+data: psRamFree=4057
+data: flashSize=16384
+data: flashFreq=40 MHz
+data: powerVcc=3.89
+data: powerState=On Battery
+data: powerBatteryPercentage=75
+data: upTime=02'53"
 
+"""
 
 @app.get("/sse")
 async def sse():
@@ -83,6 +136,8 @@ async def sse():
     async def event_generator():
         global countdown
         global battery
+        # Send  config
+        yield config_text
         while True:
             await asyncio.sleep(1)
             battery-= 5

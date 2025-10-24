@@ -28,3 +28,21 @@ export function parseConfig(configData: string) {
         }
     } catch {}
 }
+
+export async function sendConfigUpdate(deviceURL: string|null, key: string, value: string) {
+  if(!deviceURL) return;
+  // TODO
+  if(1 == 1) return;
+  try {
+    const response = await fetch(`${deviceURL}/config`, 
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: `${encodeURIComponent(key)}=${encodeURIComponent(value)}`
+    });
+    if (!response.ok) throw new Error(`Failed to update ${key}`);
+    console.log(`✅ Updated ${key}=${value}`);
+  } catch (err) {
+    console.error("⚠️ Error updating config:", err);
+  }
+}
