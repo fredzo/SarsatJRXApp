@@ -4,7 +4,7 @@ import { getAudioFeedback, getAudioNotif, getCountDownBeep, getVibrateFeedback, 
 import { Ionicons } from "@expo/vector-icons";
 import { cardSd } from '@lucide/lab';
 import { useRouter } from "expo-router";
-import { CheckSquare, Icon, Info, Minus, Monitor, Plus, QrCode, RadioTower, Speaker, Square, Wifi } from "lucide-react-native";
+import { CheckSquare, Icon, Info, Minus, Monitor, Plus, QrCode, RadioTower, Square, Volume2, Wifi } from "lucide-react-native";
 import { default as React, useContext, useEffect, useRef, useState } from 'react';
 import { Platform, ScrollView, StyleSheet, Switch, Text, TextInput, TouchableOpacity, UIManager, View } from 'react-native';
 import Animated, { LinearTransition, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
@@ -17,20 +17,6 @@ if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental
 
 /* ----------------------- LABELS -------------------------- */
 const LABELS: Record<string, string> = {
-  frameSound: "Frame sound",
-  countdownSound: "Countdown sound",
-  countdownLeds: "Countdown Leds",
-  reloadCountdown: "Countdown auto-reload",
-  countdownDuration: "Countdown duration",
-  fliterOrbito: "Filter orbito",
-  filterInvalid: "Filter invalid",
-  buzzerLevel: "Buzzer level",
-  touchSound: "Touch sound",
-  displayReverse: "Reverse screen",
-  showBatPercentage: "Show battery %",
-  showBatWarnMessage: "Battery warning",
-  screenOffOnCharge: "Screen off on charge",
-  allowFrameSimu: "Frame simulation",
   wifiSsid: "WiFi SSID 1",
   wifiPassPhrase: "WiFi Passphrase 1",
   wifiSsid1: "WiFi SSID 2",
@@ -83,21 +69,18 @@ function formatValue(key: string, value: string): string {
     {
       const bytes = parseInt(value);
       if (isNaN(bytes)) return value;
-      const kb = (bytes / 1024).toFixed(1);
-      return `${kb} KB (${bytes.toLocaleString()} bytes)`;
+      const kb = (bytes / 1024).toFixed(0);
+      return `${kb} kB (${bytes.toLocaleString()} bytes)`;
     }
     case "sdCardTotalBytes":
     case "sdCardUsedBytes": {
       const bytes = parseInt(value);
       if (isNaN(bytes)) return value;
-      const kb = (bytes / 1024).toFixed(1);
+      const kb = (bytes / 1024).toFixed(0);
       return `${kb} kB`;
     }
     case "chipFrequency": {
       return `${value} MHz`;
-    }
-    case "powerVcc": {
-      return `${value}V`;
     }
     case "powerBatteryPercentage": {
       return `${value}%`;
@@ -290,8 +273,8 @@ export default function SettingsScreen() {
           alignItems: "center",
           backgroundColor: "#222",
           borderRadius: 10,
-          paddingHorizontal: 12,
           paddingVertical: 8,
+          paddingHorizontal: 10,
         }}
       >
         <TextInput
@@ -415,7 +398,7 @@ export default function SettingsScreen() {
         >
           <Row label="Frame sound" control={renderToggle("frameSound")} />
           <Row label="Countdown sound" control={renderToggle("countdownSound")} />
-          <Row label="Countdown leds" control={renderToggle("countdownLeds")} />
+          <Row label="Countdown Leds" control={renderToggle("countdownLeds")} />
           <Row label="Auto reload" control={renderToggle("reloadCountdown")} />
           <Row
             label="Countdown duration"
@@ -427,8 +410,8 @@ export default function SettingsScreen() {
 
         {/* === AUDIO SECTION === */}
         <Section
-          title="Audio"
-          icon={<Speaker size={18} color="#3fe6e6" style={{ marginRight: 6 }} />}
+          title="Sound"
+          icon={<Volume2 size={18} color="#3fe6e6" style={{ marginRight: 6 }} />}
         >
           <Row label="Touch sound" control={renderToggle("touchSound")} />
           <Row
@@ -442,7 +425,8 @@ export default function SettingsScreen() {
           title="Display"
           icon={<Monitor size={18} color="#3fe6e6" style={{ marginRight: 6 }} />}
         >
-          <Row label="Reverse" control={renderToggle("displayReverse")} />
+          <Row label="Screen On" control={renderToggle("screenOn")} />
+          <Row label="Screen Reverse" control={renderToggle("displayReverse")} />
           <Row label="Show battery %" control={renderToggle("showBatPercentage")} />
           <Row
             label="Warn battery"
@@ -475,6 +459,7 @@ export default function SettingsScreen() {
           {[
             "wifiMode",
             "wifiStatus",
+            "wifiCurrentSsid",
             "wifiRssi",
             "wifiIP",
             "wifiGatewayIP",
@@ -537,9 +522,9 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: "#1e1e1e",
     borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    marginBottom: 12,
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+    marginVertical: 3,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",

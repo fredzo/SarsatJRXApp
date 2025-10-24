@@ -31,8 +31,6 @@ export function parseConfig(configData: string) {
 
 export async function sendConfigUpdate(deviceURL: string|null, key: string, value: string) {
   if(!deviceURL) return;
-  // TODO
-  if(1 == 1) return;
   try {
     const response = await fetch(`${deviceURL}/config`, 
     {
