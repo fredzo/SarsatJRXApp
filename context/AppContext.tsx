@@ -1,5 +1,5 @@
 import { Config, currentConfig, parseConfig } from '@/lib/config';
-import { addFrame, currentIndex, Frame, frames, parseFrame, selectedFrame, setCurrentFrame, setCurrentIndex } from '@/lib/frames';
+import { addFrame, currentIndex, Frame, frames, FrameState, getFrameCount, parseFrame, selectedFrame, setCurrentFrame, setCurrentIndex } from '@/lib/frames';
 import { feedbackNotification, playBeepHigh, playBeepLow, playSoundError, playSoundFiltered, playSoundKO, playSoundOK } from "@/lib/notifications";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { createContext, useEffect, useRef, useState } from "react";
@@ -174,8 +174,9 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
             frames.split("\n#\n").forEach(line => 
             {
                 parseFrame(line);
-                updateCurrentFrame(selectedFrame);
             });
+            if(selectedFrame?.state === FrameState.OK) playSoundOK();
+            updateCurrentFrame(selectedFrame);
         }
         else if (e.data.startsWith('frame'))
         {
@@ -217,6 +218,17 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
                         playSoundError();
                     }
                 }
+            }
+        }
+        else if (e.data.startsWith('connected'))
+        {   // Connection finished : fetch frames if needed
+            if(getFrameCount() == 0)
+            {   // No frames yet, check for frames on the decoder
+                fetchFrames().then(() => 
+                {
+                    if(selectedFrame?.state === FrameState.OK) playSoundOK();
+                    updateCurrentFrame(selectedFrame);
+                });
             }
         }
     };
@@ -265,13 +277,6 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
             console.log("✅ EventSource connected");
             retryDelay.current = 1000; // reset reconnection delay
             feedbackNotification(); // Feedback notif
-            // Frames are now pushed by the device upon connection
-            /*
-            if(getFrameCount() == 0)
-            {   // No frames yet, check for frames on the decoder
-                fetchFrames();
-                updateCurrentFrame(selectedFrame);
-            }*/
             // Reset watchdog timer
             lastMessageRef.current = Date.now();
             connecting = false;
