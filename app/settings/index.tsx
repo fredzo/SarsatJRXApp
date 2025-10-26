@@ -1,5 +1,5 @@
 import { AppContext } from "@/context/AppContext";
-import { sendConfigUpdate } from "@/lib/config";
+import { sendConfigUpdate, updateConfigValue } from "@/lib/config";
 import { getAudioFeedback, getAudioNotif, getCountDownBeep, getVibrateFeedback, getVibrateNotif, setAudioFeedback, setAudioFrameNotif, setCountDownBeep, setVibrateFeendback, setVibrateFrameNotif } from "@/lib/notifications";
 import { Ionicons } from "@expo/vector-icons";
 import { cardSd } from '@lucide/lab';
@@ -126,6 +126,12 @@ export default function SettingsScreen() {
     prevConnected.current = connected;
   }, [connected]);
 
+  useEffect(() => {
+    if (config?.data) {
+      setLocalConfig(config.data);
+    }
+  }, [config]);
+
   // Save changes
   const toggleCountdown = async (value: boolean) => {
     setCountdownNotification(value);
@@ -170,7 +176,10 @@ export default function SettingsScreen() {
   }));
 
   const updateConfig = (key: string, value: string) => {
+    if (localConfig[key] === value) return;
     setLocalConfig({ ...localConfig, [key]: value });
+    // Update context config
+    updateConfigValue(key,value);
     sendConfigUpdate(deviceURL, key, value);
   };
 
@@ -416,7 +425,7 @@ export default function SettingsScreen() {
           <Row label="Touch sound" control={renderToggle("touchSound")} />
           <Row
             label="Buzzer level"
-            control={renderNumber("buzzerLevel", 0, 100)}
+            control={renderNumber("buzzerLevel", 0, 255)}
           />
         </Section>
 

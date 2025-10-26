@@ -11,6 +11,11 @@ export function setConfig(newConfig:Config| null) {
   currentConfig = newConfig;
 }
 
+export function updateConfigValue(key:string, value:string)
+{
+  if(currentConfig) currentConfig.data[key]=value;
+}
+
 export function parseConfig(configData: string) {
     try {
         const parsed: Record<string, string> = {};
