@@ -175,7 +175,7 @@ export default function SettingsScreen() {
   }));
 
   const updateConfig = (key: string, value: string) => {
-    if (localConfig[key] === value) return;
+    if (config?.data[key] === value) return;
     setLocalConfig({ ...localConfig, [key]: value });
     // Update context config
     updateConfigValue(key,value);
@@ -233,7 +233,7 @@ export default function SettingsScreen() {
       </TouchableOpacity>
       <TextInput
         style={[styles.numberInput, { width: 60, textAlign: "center" }]}
-        value={localConfig[key] || "0"}
+        value={localConfig[key]}
         keyboardType="numeric"
         onChangeText={(t) => setLocalConfig({ ...localConfig, [key]: t })}
         onSubmitEditing={(e) => updateConfig(key, e.nativeEvent.text)}
