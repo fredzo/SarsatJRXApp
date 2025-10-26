@@ -5,7 +5,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { cardSd } from '@lucide/lab';
 import { useRouter } from "expo-router";
 import { CheckSquare, Icon, Info, Minus, Monitor, Plus, QrCode, RadioTower, Square, Volume2, Wifi } from "lucide-react-native";
-import { default as React, useContext, useEffect, useRef, useState } from 'react';
+import { default as React, useContext, useEffect, useState } from 'react';
 import { Platform, ScrollView, StyleSheet, Switch, Text, TextInput, TouchableOpacity, UIManager, View } from 'react-native';
 import Animated, { LinearTransition, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 
@@ -98,8 +98,7 @@ function formatValue(key: string, value: string): string {
 
 export default function SettingsScreen() {
   const [showList, setShowList] = useState(false);
-  const { saveDeviceURL, savedURLs, deviceURL, connected, config } = useContext(AppContext);
-  const prevConnected = useRef(connected);
+  const { saveDeviceURL, savedURLs, deviceURL, connected, waitForConnection, setWaitForConnection, config } = useContext(AppContext);
 
   const [countdownNotification, setCountdownNotification] = useState(getCountDownBeep());
   const [frameNotification, setFrameNotification] = useState(getAudioNotif());
@@ -118,12 +117,12 @@ export default function SettingsScreen() {
   }, [deviceURL]);
 
   useEffect(() => {
-    console.log("Use effect connected :", connected);
-    if (!prevConnected.current && connected) {
+    console.log("Use effect connected, waitForConnect :", connected, waitForConnection);
+    if (waitForConnection && connected) {
       // Detect connection and go back to main screen
-      router.back();
+      router.replace("/");
+      setWaitForConnection(false);
     }
-    prevConnected.current = connected;
   }, [connected]);
 
   useEffect(() => {

@@ -4,10 +4,10 @@ import { useRouter } from "expo-router";
 import React, { useContext, useEffect } from "react";
 import { Dimensions, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import Animated, {
-    useAnimatedStyle,
-    useSharedValue,
-    withRepeat,
-    withTiming,
+  useAnimatedStyle,
+  useSharedValue,
+  withRepeat,
+  withTiming,
 } from "react-native-reanimated";
 
 const { width } = Dimensions.get("window");
@@ -16,7 +16,7 @@ const SCAN_SIZE = width * 0.7;
 export default function QRScanner() {
   const router = useRouter();
   const [permission, requestPermission] = useCameraPermissions();
-  const { saveDeviceURL } = useContext(AppContext);
+  const { saveDeviceURL, setWaitForConnection } = useContext(AppContext);
 
   const lineY = useSharedValue(0);
 
@@ -40,8 +40,9 @@ export default function QRScanner() {
   }));
 
   const handleBarcodeScanned = async ({ data }: { data: string }) => {
+    setWaitForConnection(true);
     saveDeviceURL(data);
-    router.back(); // Ferme la modale après scan
+    router.back(); // Go back to settings screen
   };
 
   if (!permission?.granted) {

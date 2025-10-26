@@ -6,7 +6,7 @@ import React, { createContext, useEffect, useRef, useState } from "react";
 import { AppState } from "react-native";
 import EventSource, { MessageEvent } from 'react-native-sse';
 
-const DEFAULT_URLS = ["http://sarsatjrx.local", "http://localhost", "http://192.168.0.83", "http://10.0.2.2", "http://10.157.161.213"];
+const DEFAULT_URLS = ["http://sarsatjrx.local", "http://localhost"];
 
 type AppContextType = {
     // App
@@ -14,6 +14,8 @@ type AppContextType = {
     sdMounted: boolean;
     discriOn: boolean;
     batteryPercentage: number | null;
+    waitForConnection:boolean;
+    setWaitForConnection(state:boolean):void;
     connected: boolean;
     deviceURL: string | null,
     setDeviceURL: (url: string) => void;
@@ -39,6 +41,8 @@ export const AppContext = createContext<AppContextType>({
     sdMounted: false,
     discriOn: false,
     batteryPercentage: null,
+    waitForConnection:false,
+    setWaitForConnection: (state:boolean) => {},
     connected:false,
     deviceURL: null,
     setDeviceURL: () => {},
@@ -79,6 +83,7 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
     const hasRun = useRef(false);
     const inBackground = useRef(false); // True when app is in background
     // Connection status
+    const [waitForConnection, setWaitForConnectionState] = useState(false);
     const [connected, setConnected] = useState(false);
     const lastMessageRef = useRef<number>(Date.now());
     const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -92,6 +97,11 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
     const setCountdown = (countdown: number) => {
         setCountdownValue(i => (countdown));
     };
+
+    function setWaitForConnection(state:boolean)
+    {
+        setWaitForConnectionState(state);
+    }
 
     async function fetchFrames() {
         if(!storedDeviceURL) return;
@@ -412,7 +422,7 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
     };
 
   return (
-    <AppContext.Provider value={{ time, sdMounted, discriOn, batteryPercentage, connected, deviceURL, setDeviceURL, savedURLs, saveDeviceURL, frames, currentFrame, currentIndex, countdown, addFrame, setCountdown, resetCountdown, nextFrame, prevFrame, config }}>
+    <AppContext.Provider value={{ time, sdMounted, discriOn, batteryPercentage, waitForConnection, setWaitForConnection, connected, deviceURL, setDeviceURL, savedURLs, saveDeviceURL, frames, currentFrame, currentIndex, countdown, addFrame, setCountdown, resetCountdown, nextFrame, prevFrame, config }}>
       {children}
     </AppContext.Provider>
   );
