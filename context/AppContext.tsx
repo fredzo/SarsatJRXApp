@@ -67,6 +67,7 @@ let globalEventSource:EventSource | null = null;
 let storedDeviceURL: string | null = null;
 
 let connecting:boolean = false;
+let globalConnected:boolean = false;
 
 export const AppContextProvider = ({ children }: { children: React.ReactNode }) => {
     // Header info
@@ -77,7 +78,6 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
     // Connection management
     const [deviceURL, setDeviceUrlValue] =  useState<string | null>(storedDeviceURL);
     const [savedURLs, setSavedURLs] = useState<string[]>(DEFAULT_URLS);
-    const reconnectTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
     const retryDelay = useRef(1000); // 1s au départ
     const maxDelay = 5000; // 5s max
     const hasRun = useRef(false);
@@ -86,6 +86,7 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
     const [waitForConnection, setWaitForConnectionState] = useState(false);
     const [connected, setConnected] = useState(false);
     const lastMessageRef = useRef<number>(Date.now());
+    const lastConnectionAttemnpt = useRef<number>(Date.now());
     const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     // Countdown
     const [countdown, setCountdownValue] = useState<number | null>(null);
@@ -243,27 +244,21 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
         }
     };
 
-    const clearReconnectTimer = () => {
-        if (reconnectTimeout.current) {
-            clearTimeout(reconnectTimeout.current);
-            reconnectTimeout.current = null;
-        }
+    const resetRetryDelay = () => {
+        retryDelay.current = 1000;
     };
 
-    const scheduleReconnect = () => {
-            if (reconnectTimeout.current || connecting) return;
-            console.log(`🔁 Reconnection attempt in ${retryDelay.current / 1000}s...`);
-            reconnectTimeout.current = setTimeout(() => {
-                connect();
-                reconnectTimeout.current = null;
-        }, retryDelay.current);
-
+    const updateRetryDelay = () => {
         // Exponential reconnection delay
         retryDelay.current = Math.min(retryDelay.current * 2, maxDelay);
     };
 
+    const forceReconnect = () => {
+        // Set last connection attempt to longer ago than retry delay to force reconnection
+        lastConnectionAttemnpt.current = Date.now() - retryDelay.current -1;
+    };
+
     const clearGlobalEventSource = () => {
-        clearReconnectTimer();
         if((globalEventSource))
         {
             globalEventSource.removeAllEventListeners();
@@ -278,6 +273,9 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
         if(connecting) console.log("⚠️ Connetion attempt while connecting !");
         if(!storedDeviceURL || connecting) return;
         connecting = true;
+        // Clear reconnection delay and last message
+        lastMessageRef.current = Date.now();
+        lastConnectionAttemnpt.current = Date.now();
         clearGlobalEventSource();
         const url = storedDeviceURL + "/sse";
         console.log("🔌 Connecting SSE to", url);
@@ -285,18 +283,19 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
 
         globalEventSource.addEventListener("open", () => {
             console.log("✅ EventSource connected");
-            retryDelay.current = 1000; // reset reconnection delay
+            resetRetryDelay(); // reset reconnection delay
             feedbackNotification(); // Feedback notif
             // Reset watchdog timer
             lastMessageRef.current = Date.now();
-            connecting = false;
+            if (!connected) setConnected(true);
+            globalConnected = true;
         });
 
         globalEventSource.addEventListener("message", (event) => {
             console.log("📩 SSE received :", event.data);
-            connecting = false;
             lastMessageRef.current = Date.now();
             if (!connected) setConnected(true);
+            globalConnected = true;
             handleMessage(event);
             connecting = false;
         });
@@ -306,7 +305,8 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
             connecting = false;
             globalEventSource?.close();
             setConnected(false);
-            scheduleReconnect();
+            globalConnected = false;
+            forceReconnect();
         });
 
         globalEventSource.addEventListener("close", (event) => {
@@ -314,7 +314,8 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
             connecting = false;
             globalEventSource?.close();
             setConnected(false);
-            scheduleReconnect();
+            globalConnected = false;
+            forceReconnect();
         });
 
         return globalEventSource;
@@ -326,11 +327,9 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
         setDeviceUrlValue(url);
         storedDeviceURL = url;
         // Reconnect on deviceURL change
-        // Clear reconnection delay
-        lastMessageRef.current = Date.now();
-        // Force reconnecting
         connecting = false;
-        clearReconnectTimer();
+        resetRetryDelay();
+        // Force reconnecting
         connect();
         await AsyncStorage.setItem("lastDeviceURL", url);
     };    
@@ -350,7 +349,7 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
                     storedDeviceURL = saved;
                     setDeviceUrlValue(saved);
                     // Wait for deviceUrl before connection
-                    connect();
+                    forceReconnect();
                 }
                 else
                 {   // Init to default
@@ -371,28 +370,42 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
         })();
 
         // Check periodically if messages are still coming
-        timeoutRef.current = setInterval(() => {
-            const delta = Date.now() - lastMessageRef.current;
-            if ((!connecting && delta > 3000) || (connecting && delta > 5000)) {
-                console.log("⚠️ Connection lost, reconnecting…");
-                connecting = false;
-                setConnected(false);
-                // Clear delay
-                lastMessageRef.current = Date.now();
-                // Reconnect now
-                clearReconnectTimer();
-                connect();
+        timeoutRef.current = setInterval(() => 
+        {
+            if(globalConnected)
+            {   // Suposely connected => check for connection
+                const delta = Date.now() - lastMessageRef.current;
+                if ((!connecting && delta >= 3000) || (connecting && delta >= 5000)) {
+                    console.log("⚠️ Connection lost, reconnecting…");
+                    connecting = false;
+                    setConnected(false);
+                    globalConnected = false;
+                    // Reconnect now
+                    resetRetryDelay();
+                    connect();
+                }
             }
-        }, 1000);
+            else
+            {   // Not connected, see if we need to try and reconnect
+                const delta = Date.now() - lastConnectionAttemnpt.current;
+                if((!connecting && (delta >= retryDelay.current))||(connecting && delta >= 5000))
+                {   // Try and reconnect now
+                    connecting = false;
+                    console.log("⚠️ Reconnection attempt, delta = ",delta);
+                    updateRetryDelay();
+                    connect();
+                }
+            }
+        }, 200);
 
 
         const subscription = AppState.addEventListener("change", (state) => {
         if (state === "active") {
             inBackground.current = false;
             console.log("⚠️ App is active again !");
-            if(!connected)
+            if(!globalConnected)
             {   // Reconnect now
-                clearReconnectTimer();
+                resetRetryDelay();
                 connect();
             }
         } else if (state === "background") {
