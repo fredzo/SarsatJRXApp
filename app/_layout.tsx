@@ -12,7 +12,7 @@ export default function Layout() {
   return (
     <SafeAreaProvider>
       <AppContextProvider>
-          <View style={{flex:1}}>
+          <View style={{flex:1, backgroundColor: "#001a1a"}}>
             <SafeAreaView edges={['top']}>
               <StatusBar translucent={false} barStyle={'dark-content'}/>
               <Header />
@@ -27,6 +27,8 @@ export default function Layout() {
                   color:'#3fe6e6', 
                   fontSize:22
                 },
+                animation: "fade",
+                contentStyle: { backgroundColor: "#001a1a" }, 
               }}>
               {/* Main route to tabs */}
               <Stack.Screen name="(tabs)" options={{ headerShown: false, title: "Frame" }} />
