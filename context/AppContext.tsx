@@ -78,7 +78,7 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
     // Connection management
     const [deviceURL, setDeviceUrlValue] =  useState<string | null>(storedDeviceURL);
     const [savedURLs, setSavedURLs] = useState<string[]>(DEFAULT_URLS);
-    const retryDelay = useRef(1000); // 1s au départ
+    const retryDelay = useRef(0); // Reconnect right now the first time
     const maxDelay = 5000; // 5s max
     const hasRun = useRef(false);
     const inBackground = useRef(false); // True when app is in background
@@ -245,17 +245,12 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
     };
 
     const resetRetryDelay = () => {
-        retryDelay.current = 1000;
+        retryDelay.current = 0;
     };
 
     const updateRetryDelay = () => {
         // Exponential reconnection delay
-        retryDelay.current = Math.min(retryDelay.current * 2, maxDelay);
-    };
-
-    const forceReconnect = () => {
-        // Set last connection attempt to longer ago than retry delay to force reconnection
-        lastConnectionAttemnpt.current = Date.now() - retryDelay.current -1;
+        retryDelay.current = Math.min((retryDelay.current == 0 ? 1000 : retryDelay.current) * 2, maxDelay);
     };
 
     const clearGlobalEventSource = () => {
@@ -306,7 +301,6 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
             globalEventSource?.close();
             setConnected(false);
             globalConnected = false;
-            forceReconnect();
         });
 
         globalEventSource.addEventListener("close", (event) => {
@@ -315,7 +309,6 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
             globalEventSource?.close();
             setConnected(false);
             globalConnected = false;
-            forceReconnect();
         });
 
         return globalEventSource;
@@ -349,7 +342,7 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
                     storedDeviceURL = saved;
                     setDeviceUrlValue(saved);
                     // Wait for deviceUrl before connection
-                    forceReconnect();
+                    resetRetryDelay();
                 }
                 else
                 {   // Init to default
