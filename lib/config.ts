@@ -1,6 +1,5 @@
 
 export type Config = {
-
   data: Record<string, string>;
 };
 
