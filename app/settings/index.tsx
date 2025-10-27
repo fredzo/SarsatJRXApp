@@ -121,7 +121,6 @@ export default function SettingsScreen() {
 
   useEffect(() => {
     if (config?.data) {
-      console.log("Set local config !")
       setLocalConfig(config.data);
     }
   }, [config]);
@@ -233,10 +232,10 @@ export default function SettingsScreen() {
         onChangeText={(t) => setLocalConfig({ ...localConfig, [key]: t })}
         onSubmitEditing={(e) => {
           const stringValue = e.nativeEvent.text;
-          var v = parseInt(stringValue);
+          let v = parseInt(stringValue);
           v = Math.max(min, v);
           v = Math.min(max, v);
-          updateConfig(key, v.toString())
+          updateConfig(key, v.toString());
         }}
       />
       <TouchableOpacity
