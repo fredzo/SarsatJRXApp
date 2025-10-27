@@ -12,11 +12,11 @@ import Animated, { LinearTransition, useAnimatedStyle, useSharedValue, withTimin
 /* ----------------------- LABELS -------------------------- */
 const LABELS: Record<string, string> = {
   wifiSsid: "WiFi SSID 1",
-  wifiPassPhrase: "WiFi Passphrase 1",
+  wifiPassPhrase: "WiFi Pass. 1",
   wifiSsid1: "WiFi SSID 2",
-  wifiPassPhrase1: "WiFi Passphrase 2",
+  wifiPassPhrase1: "WiFi Pass. 2",
   wifiSsid2: "WiFi SSID 3",
-  wifiPassPhrase2: "WiFi Passphrase 3",
+  wifiPassPhrase2: "WiFi Pass. 3",
   timeZone: "Timezone",
   sdCardMounted: "SD card mounted",
   sdCardTotalBytes: "Total space",
@@ -203,6 +203,7 @@ export default function SettingsScreen() {
         value={localConfig[key] || ""}
         onChangeText={(t) => setLocalConfig({ ...localConfig, [key]: t })}
         onSubmitEditing={(e) => updateConfig(key, e.nativeEvent.text)}
+        selectTextOnFocus={true}
       />
     ) : [
       "rtcNtpSync",
@@ -237,6 +238,7 @@ export default function SettingsScreen() {
           v = Math.min(max, v);
           updateConfig(key, v.toString());
         }}
+        selectTextOnFocus={true}
       />
       <TouchableOpacity
         style={styles.numButton}
@@ -406,8 +408,8 @@ export default function SettingsScreen() {
         >
           <Row label="Frame sound" control={renderToggle("frameSound")} />
           <Row label="Countdown sound" control={renderToggle("countdownSound")} />
-          <Row label="Countdown Leds" control={renderToggle("countdownLeds")} />
-          <Row label="Auto reload" control={renderToggle("reloadCountdown")} />
+          <Row label="Countdown leds" control={renderToggle("countdownLeds")} />
+          <Row label="Auto reload countdown" control={renderToggle("reloadCountdown")} />
           <Row
             label="Countdown duration"
             control={renderNumber("countdownDuration", 0, 255, 1)}
