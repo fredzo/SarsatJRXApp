@@ -6,14 +6,8 @@ import { cardSd } from '@lucide/lab';
 import { useRouter } from "expo-router";
 import { CheckSquare, Icon, Info, Minus, Monitor, Plus, QrCode, RadioTower, Square, Volume2, Wifi } from "lucide-react-native";
 import { default as React, useContext, useEffect, useState } from 'react';
-import { Platform, ScrollView, StyleSheet, Switch, Text, TextInput, TouchableOpacity, UIManager, View } from 'react-native';
+import { ScrollView, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Animated, { LinearTransition, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
-
-// ✅ Enable LayoutAnimation on Android
-if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) 
-{
-  UIManager.setLayoutAnimationEnabledExperimental(true);
-}
 
 /* ----------------------- LABELS -------------------------- */
 const LABELS: Record<string, string> = {
@@ -127,6 +121,7 @@ export default function SettingsScreen() {
 
   useEffect(() => {
     if (config?.data) {
+      console.log("Set local config !")
       setLocalConfig(config.data);
     }
   }, [config]);
@@ -220,32 +215,38 @@ export default function SettingsScreen() {
       <Text style={styles.value}>{formatValue(key, localConfig[key])}</Text>
     );
 
-  const renderNumber = (key: string, min: number, max: number) => (
+  const renderNumber = (key: string, min: number, max: number, increment:number) => (
     <View style={styles.numberContainer}>
       <TouchableOpacity
         style={styles.numButton}
         onPress={() => {
-          const v = Math.max(min, (parseInt(localConfig[key] || "0") || 0) - 1);
+          const v = Math.max(min, (parseInt(localConfig[key] || "0") || 0) - increment);
           updateConfig(key, v.toString());
         }}
       >
-        <Minus size={18} color="#fff" />
+        <Minus size={22} color="#fff" />
       </TouchableOpacity>
       <TextInput
         style={[styles.numberInput, { width: 60, textAlign: "center" }]}
         value={localConfig[key]}
         keyboardType="numeric"
         onChangeText={(t) => setLocalConfig({ ...localConfig, [key]: t })}
-        onSubmitEditing={(e) => updateConfig(key, e.nativeEvent.text)}
+        onSubmitEditing={(e) => {
+          const stringValue = e.nativeEvent.text;
+          var v = parseInt(stringValue);
+          v = Math.max(min, v);
+          v = Math.min(max, v);
+          updateConfig(key, v.toString())
+        }}
       />
       <TouchableOpacity
         style={styles.numButton}
         onPress={() => {
-          const v = Math.min(max, (parseInt(localConfig[key] || "0") || 0) + 1);
+          const v = Math.min(max, (parseInt(localConfig[key] || "0") || 0) + increment);
           updateConfig(key, v.toString());
         }}
       >
-        <Plus size={18} color="#fff" />
+        <Plus size={22} color="#fff" />
       </TouchableOpacity>
     </View>
   );
@@ -410,7 +411,7 @@ export default function SettingsScreen() {
           <Row label="Auto reload" control={renderToggle("reloadCountdown")} />
           <Row
             label="Countdown duration"
-            control={renderNumber("countdownDuration", 0, 999)}
+            control={renderNumber("countdownDuration", 0, 255, 1)}
           />
           <Row label="Filter orbito" control={renderToggle("fliterOrbito")} />
           <Row label="Filter invalid" control={renderToggle("filterInvalid")} />
@@ -424,7 +425,7 @@ export default function SettingsScreen() {
           <Row label="Touch sound" control={renderToggle("touchSound")} />
           <Row
             label="Buzzer level"
-            control={renderNumber("buzzerLevel", 0, 255)}
+            control={renderNumber("buzzerLevel", 0, 255, 10)}
           />
         </Section>
 
@@ -437,11 +438,11 @@ export default function SettingsScreen() {
           <Row label="Screen Reverse" control={renderToggle("displayReverse")} />
           <Row label="Show battery %" control={renderToggle("showBatPercentage")} />
           <Row
-            label="Warn battery"
+            label="Battery warn message"
             control={renderToggle("showBatWarnMessage")}
           />
           <Row
-            label="Off on charge"
+            label="Screen off on charge"
             control={renderToggle("screenOffOnCharge")}
           />
           <Row label="Frame simulation" control={renderToggle("allowFrameSimu")} />

@@ -130,6 +130,11 @@ data: upTime=02'53"
 
 """
 
+@app.post("/config", response_class=PlainTextResponse)
+async def config():
+    return ""
+
+
 @app.get("/sse")
 async def sse():
     """Send SSE events for new frames and countdown ticks."""
