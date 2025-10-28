@@ -6,7 +6,7 @@ import { cardSd } from '@lucide/lab';
 import { useRouter } from "expo-router";
 import { CheckSquare, Icon, Info, Minus, Monitor, Plus, QrCode, RadioTower, Square, Volume2, Wifi } from "lucide-react-native";
 import { default as React, useCallback, useContext, useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Animated, { LinearTransition, useAnimatedStyle, useDerivedValue, useSharedValue, withTiming } from "react-native-reanimated";
 
 /* ----------------------- LABELS -------------------------- */
@@ -32,7 +32,7 @@ const LABELS: Record<string, string> = {
   wifiDNS1: "DNS1",
   wifiDNS2: "DNS2",
   wifiMacAddress: "MAC Address",
-  wifiSubnetMask: "Seubnet Mask",
+  wifiSubnetMask: "Subnet Mask",
   rtcDate: "Date",
   rtcNtpSync: "NTP Synced",
   firmwareVersion: "Firmware Version",
@@ -46,7 +46,7 @@ const LABELS: Record<string, string> = {
   flashSize: "Flash Size",
   powerVcc: "VCC",
   powerState: "Power State",
-  powerBatteryPercentage: "Battery percentage",
+  powerBatteryPercentage: "Battery %",
   upTime: "Up time",
 };
 
@@ -249,6 +249,7 @@ export default function SettingsScreen() {
         onSubmitEditing={(e) => {
           const stringValue = e.nativeEvent.text;
           let v = parseInt(stringValue);
+          if(Number.isNaN(v)) v = min;
           v = Math.max(min, v);
           v = Math.min(max, v);
           updateConfig(key, v.toString());
@@ -284,7 +285,12 @@ export default function SettingsScreen() {
 
 
   return (
-    <ScrollView style={styles.container}>
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 80 : 0} // ajuste si tu as un header
+    >
+    <ScrollView style={styles.container} keyboardShouldPersistTaps="handled">
       <Text style={styles.h1}>
         Decoder address
       </Text>
@@ -535,6 +541,7 @@ export default function SettingsScreen() {
       </View>
       )}
     </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
