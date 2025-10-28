@@ -5,9 +5,9 @@ import { Ionicons } from "@expo/vector-icons";
 import { cardSd } from '@lucide/lab';
 import { useRouter } from "expo-router";
 import { CheckSquare, Icon, Info, Minus, Monitor, Plus, QrCode, RadioTower, Square, Volume2, Wifi } from "lucide-react-native";
-import { default as React, useContext, useEffect, useState } from 'react';
+import { default as React, useCallback, useContext, useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import Animated, { LinearTransition, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
+import Animated, { LinearTransition, useAnimatedStyle, useDerivedValue, useSharedValue, withTiming } from "react-native-reanimated";
 
 /* ----------------------- LABELS -------------------------- */
 const LABELS: Record<string, string> = {
@@ -160,7 +160,7 @@ export default function SettingsScreen() {
 
   const rotation = useSharedValue(0);
 
-  useEffect(() => {
+  useDerivedValue(() => {
     rotation.value = withTiming(showList ? 180 : 0, { duration: 200 });
   }, [showList]);
 
@@ -168,13 +168,15 @@ export default function SettingsScreen() {
     transform: [{ rotate: `${rotation.value}deg` }],
   }));
 
-  const updateConfig = (key: string, value: string) => {
-    if (config?.data[key] === value) return;
-    setLocalConfig({ ...localConfig, [key]: value });
-    // Update context config
-    updateConfigValue(key,value);
-    sendConfigUpdate(deviceURL, key, value);
-  };
+  const updateConfig = useCallback(
+    (key: string, value: string) => {
+      if (config?.data[key] === value) return;
+      setLocalConfig((prev) => ({ ...prev, [key]: value }));
+      updateConfigValue(key, value);
+      sendConfigUpdate(deviceURL, key, value);
+    },
+    [deviceURL, config]
+  );
 
   const renderToggle = (key: string) => (
     <Switch
@@ -215,14 +217,27 @@ export default function SettingsScreen() {
       <Text style={styles.value}>{formatValue(key, localConfig[key])}</Text>
     );
 
-  const renderNumber = (key: string, min: number, max: number, increment:number) => (
+  const handleDecrement = useCallback(
+    (key: string, min: number, inc: number) => {
+      const v = Math.max(min, (parseInt(localConfig[key] || "0") || 0) - inc);
+      updateConfig(key, v.toString());
+    },
+    [localConfig, updateConfig]
+  );
+
+  const handleIncrement = useCallback(
+    (key: string, max: number, inc: number) => {
+      const v = Math.min(max, (parseInt(localConfig[key] || "0") || 0) + inc);
+      updateConfig(key, v.toString());
+    },
+    [localConfig, updateConfig]
+  );
+
+  const renderNumber =  useCallback((key: string, min: number, max: number, increment:number) => (
     <View style={styles.numberContainer}>
       <TouchableOpacity
         style={styles.numButton}
-        onPress={() => {
-          const v = Math.max(min, (parseInt(localConfig[key] || "0") || 0) - increment);
-          updateConfig(key, v.toString());
-        }}
+        onPress={() => handleDecrement(key, min, increment)}
       >
         <Minus size={22} color="#fff" />
       </TouchableOpacity>
@@ -242,15 +257,13 @@ export default function SettingsScreen() {
       />
       <TouchableOpacity
         style={styles.numButton}
-        onPress={() => {
-          const v = Math.min(max, (parseInt(localConfig[key] || "0") || 0) + increment);
-          updateConfig(key, v.toString());
-        }}
+        onPress={() => handleIncrement(key, max, increment)}
       >
         <Plus size={22} color="#fff" />
       </TouchableOpacity>
     </View>
-  );
+  ),
+  [localConfig, handleDecrement, handleIncrement, updateConfig]);
 
   const Section = ({ title, icon, children }: any) => (
     <View style={styles.section}>
