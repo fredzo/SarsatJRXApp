@@ -14,7 +14,7 @@ export default function Layout() {
       <AppContextProvider>
           <View style={{flex:1, backgroundColor: "#001a1a"}}>
             <SafeAreaView edges={['top']}>
-              <StatusBar translucent={false} barStyle={'dark-content'}/>
+              <StatusBar translucent={false} barStyle={'light-content'}/>
               <Header />
             </SafeAreaView>
             <Stack screenOptions={{
