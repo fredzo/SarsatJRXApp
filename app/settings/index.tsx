@@ -6,7 +6,8 @@ import { cardSd } from '@lucide/lab';
 import { useRouter } from "expo-router";
 import { CheckSquare, Icon, Info, Minus, Monitor, Plus, QrCode, RadioTower, Square, Volume2, Wifi } from "lucide-react-native";
 import { default as React, useCallback, useContext, useEffect, useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ScrollView, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import Animated, { LinearTransition, useAnimatedStyle, useDerivedValue, useSharedValue, withTiming } from "react-native-reanimated";
 
 /* ----------------------- LABELS -------------------------- */
@@ -206,7 +207,7 @@ export default function SettingsScreen() {
         onChangeText={(t) => setLocalConfig({ ...localConfig, [key]: t })}
         onSubmitEditing={(e) => updateConfig(key, e.nativeEvent.text)}
         selectTextOnFocus={true}
-      />
+        />
     ) : [
       "rtcNtpSync",
       "sdCardMounted",
@@ -285,16 +286,16 @@ export default function SettingsScreen() {
 
 
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      keyboardVerticalOffset={Platform.OS === "ios" ? 80 : 0} // ajuste si tu as un header
-    >
-    <ScrollView style={styles.container} keyboardShouldPersistTaps="handled">
+  <KeyboardAwareScrollView
+    style={styles.container}
+    extraScrollHeight={200}
+    enableOnAndroid={true}
+    keyboardShouldPersistTaps="handled"
+  >
+      <ScrollView style={styles.container}>
       <Text style={styles.h1}>
         Decoder address
       </Text>
-
       {/* Editable combo */}
       <View
         style={{
@@ -541,7 +542,7 @@ export default function SettingsScreen() {
       </View>
       )}
     </ScrollView>
-    </KeyboardAvoidingView>
+    </KeyboardAwareScrollView>
   );
 }
 
@@ -627,7 +628,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     borderRadius: 6,
     minWidth: 260,
-    textAlign: "right",
+    textAlign: "left",
   },
   numberInput: {
     color: "#fff",
@@ -635,7 +636,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     borderRadius: 6,
     minWidth: 60,
-    textAlign: "right",
+    textAlign: "center",
   },
   numButton: {
     backgroundColor: "#2563eb",
