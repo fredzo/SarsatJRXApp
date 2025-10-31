@@ -8,7 +8,16 @@
     "scheme": "sarsatjrxapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/images/splash-icon.png",
+      "imageWidth": 1024,
+      "resizeMode": "cover",
+      "backgroundColor": "#001a1a"
+    },    
     "ios": {
+      "splash": {
+        "backgroundColor": "#001a1a"
+      },
       "supportsTablet": true,
       "bundleIdentifier": "com.fredzo.SarsatJRXApp",
       "infoPlist": {
@@ -21,6 +30,9 @@
       }
     },
     "android": {
+      "splash": {
+        "backgroundColor": "#001a1a"
+      },
       "adaptiveIcon": {
         "backgroundColor": "#001a1a",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -49,18 +61,6 @@
     "plugins": [
       "./withCleartextTraffic.js",
       "expo-router",
-      [
-        "expo-splash-screen",
-        {
-          "image": "./assets/images/splash-icon.png",
-          "imageWidth": 200,
-          "resizeMode": "contain",
-          "backgroundColor": "#001a1a",
-          "dark": {
-            "backgroundColor": "#001a1a"
-          }
-        }
-      ],
       [
       "expo-asset",
       {
