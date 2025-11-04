@@ -3,7 +3,7 @@ export type Config = {
   data: Record<string, string>;
 };
 
-export let currentConfig: Config | null;
+export var currentConfig: Config | null;
 
 export function setConfig(newConfig:Config| null) {
   //console.log("Set current frame ", frame?.data.title);

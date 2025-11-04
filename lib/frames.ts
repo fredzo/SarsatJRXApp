@@ -15,9 +15,9 @@ export type Frame = {
   data: Record<string, string>;
 };
 
-export let frames:Frame[] = [];
-export let selectedFrame: Frame | null;
-export let currentIndex: number;
+export var frames:Frame[] = [];
+export var selectedFrame: Frame | null;
+export var currentIndex: number;
 
 export function setCurrentIndex(index:number) {
   //console.log("Set current index = ",index);

@@ -3,11 +3,11 @@ import { Asset } from "expo-asset";
 import { AudioModule, useAudioPlayer } from 'expo-audio';
 import { Platform, Vibration } from 'react-native';
 
-let countdownBeepOn: boolean = true;
-let audioFrameNotifOn: boolean = true;
-let vibrateFrameNotifOn: boolean = true;
-let audioFeedbackOn: boolean = true;
-let vibrateFeedbackOn: boolean = true;
+var countdownBeepOn: boolean = false;
+var audioFrameNotifOn: boolean = true;
+var vibrateFrameNotifOn: boolean = true;
+var audioFeedbackOn: boolean = true;
+var vibrateFeedbackOn: boolean = true;
 
 const AUDIO_COUNTDOWN_PREF = 'audioCountdown';
 const AUDIO_FRAME_NOTIF_PREF = 'audioFrameNotif';

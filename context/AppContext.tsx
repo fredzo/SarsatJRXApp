@@ -62,12 +62,20 @@ export const AppContext = createContext<AppContextType>({
     config: null,
 });
 
-let globalEventSource:EventSource | null = null;
+var globalEventSource:EventSource | null = null;
 
-let storedDeviceURL: string | null = null;
+var storedDeviceURL: string | null = null;
 
-let connecting:boolean = false;
-let globalConnected:boolean = false;
+var connecting:boolean = false;
+var globalConnected:boolean = false;
+
+var hasRun = false;
+
+var timeoutRef:ReturnType<typeof setTimeout> | null = null;
+
+var lastMessage = Date.now();
+var lastConnectionAttemnpt = Date.now();
+
 
 export const AppContextProvider = ({ children }: { children: React.ReactNode }) => {
     // Header info
@@ -80,14 +88,10 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
     const [savedURLs, setSavedURLs] = useState<string[]>(DEFAULT_URLS);
     const retryDelay = useRef(0); // Reconnect right now the first time
     const maxDelay = 5000; // 5s max
-    const hasRun = useRef(false);
     const inBackground = useRef(false); // True when app is in background
     // Connection status
     const [waitForConnection, setWaitForConnectionState] = useState(false);
     const [connected, setConnected] = useState(false);
-    const lastMessageRef = useRef<number>(Date.now());
-    const lastConnectionAttemnpt = useRef<number>(Date.now());
-    const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     // Countdown
     const [countdown, setCountdownValue] = useState<number | null>(null);
     // Current frame
@@ -269,8 +273,8 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
         if(!storedDeviceURL || connecting) return;
         connecting = true;
         // Clear reconnection delay and last message
-        lastMessageRef.current = Date.now();
-        lastConnectionAttemnpt.current = Date.now();
+        lastMessage = Date.now();
+        lastConnectionAttemnpt = Date.now();
         clearGlobalEventSource();
         const url = storedDeviceURL + "/sse";
         console.log("🔌 Connecting SSE to", url);
@@ -281,14 +285,14 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
             resetRetryDelay(); // reset reconnection delay
             feedbackNotification(); // Feedback notif
             // Reset watchdog timer
-            lastMessageRef.current = Date.now();
+            lastMessage = Date.now();
             if (!connected) setConnected(true);
             globalConnected = true;
         });
 
         globalEventSource.addEventListener("message", (event) => {
             console.log("📩 SSE received :", event.data);
-            lastMessageRef.current = Date.now();
+            lastMessage = Date.now();
             if (!connected) setConnected(true);
             globalConnected = true;
             handleMessage(event);
@@ -329,8 +333,8 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
 
     useEffect(() => {
         // Only run init stuff once
-        if (hasRun.current) return;
-        hasRun.current = true;
+        if (hasRun) return;
+        hasRun = true;
 
         // Load previously saved device URL
         (async () => {
@@ -363,11 +367,11 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
         })();
 
         // Check periodically if messages are still coming
-        timeoutRef.current = setInterval(() => 
+        timeoutRef = setInterval(() => 
         {
             if(globalConnected)
             {   // Suposely connected => check for connection
-                const delta = Date.now() - lastMessageRef.current;
+                const delta = Date.now() - lastMessage;
                 if ((!connecting && delta >= 3000) || (connecting && delta >= 5000)) {
                     console.log("⚠️ Connection lost, reconnecting…");
                     connecting = false;
@@ -380,7 +384,7 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
             }
             else
             {   // Not connected, see if we need to try and reconnect
-                const delta = Date.now() - lastConnectionAttemnpt.current;
+                const delta = Date.now() - lastConnectionAttemnpt;
                 if((!connecting && (delta >= retryDelay.current))||(connecting && delta >= 5000))
                 {   // Try and reconnect now
                     connecting = false;
@@ -412,7 +416,7 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
             /*console.log("👋 Closing EventSource");
             globalEventSource.close();
             if (reconnectTimeout.current) clearTimeout(reconnectTimeout.current);
-            if (timeoutRef.current) clearInterval(timeoutRef.current);*/
+            if (timeoutRef) clearInterval(timeoutRef);*/
         };
     }, []);
 
