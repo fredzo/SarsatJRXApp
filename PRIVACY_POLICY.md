@@ -90,7 +90,7 @@ To remove all data, simply **uninstall the application**.
 
 If you have any questions about this Privacy Policy, please contact:
 
-📧 **[Your contact email or GitHub issues link]**
+📧 **f4jrx.fr@gmail.com**
 
 ---
 
