@@ -11,10 +11,22 @@ React Native (Expo, TypeScript, expo-router) app that connects to a 406 MHz beac
 - SSE subscription to `http://sarsatjrx.local/sse`.
 - Beep sound on frame reception (`assets/beep.wav`).
 
+## Prerequisities
+Install Node.js
+
 ## Install & Run
 ```bash
+npm install -g corepack
 yarn install
 yarn run start
 ```
 Open in Expo Go or web.
+
+## Run decoder simulator server
+```bash
+cd server
+pip install fastapi uvicorn
+uvicorn sarsatjrx:app --reload --host 0.0.0.0 --port 80
+```
+
 
